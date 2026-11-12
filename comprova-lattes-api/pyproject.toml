@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comprova-lattes"
+version = "0.1.0"
+description = "Validação semiautomatizada do Currículo Lattes via XML, LLM multimodal e motor determinístico"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "defusedxml>=0.7.1",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "google-genai>=1.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "celery[redis]>=5.4.0",
+    "redis>=5.2.0",
+    "sqlalchemy>=2.0.36",
+    "psycopg[binary]>=3.2.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "httpx>=0.27.0",
+    "ruff>=0.7.0",
+    "pandas>=2.2.0",
+    "scikit-learn>=1.5.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

@@ -9,6 +9,8 @@ tcc/
 │   │   ├── PROJECT.md          # Visão, metas e escopo
 │   │   ├── ROADMAP.md          # Marcos M0 a M6
 │   │   └── STATE.md            # Decisões (AD) e questões em aberto (OPEN)
+│   ├── features/                # Contratos M1/M2 e protocolo experimental
+│   ├── HANDOFF.md               # Continuidade e evidências atuais
 │   └── codebase/
 │       ├── ARCHITECTURE.md     # Diagrama e divisão de módulos
 │       ├── PROFESSOR-REQUIREMENTS.md # Checklist das exigências do orientador

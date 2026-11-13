@@ -22,3 +22,8 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+
+# Referencias locais: legado do Drive e artefatos de terceiros sem redistribuicao definida
+references/legacy-drive/
+references/xml-grammars/cnpq-official/
+references/xml-grammars/community-dtd/

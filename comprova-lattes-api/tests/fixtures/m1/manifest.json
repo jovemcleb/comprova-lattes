@@ -1,0 +1,459 @@
+{
+  "manifest_version": "1.0.0",
+  "scope": "M1-Parser-Fixtures",
+  "generated_at": "2026-11-13",
+  "encoding_standard": "UTF-8",
+  "provenance_statement": "Estruturas baseadas exclusivamente no mapeamento preliminar (.specs/features/m1-parser/xml-mapping.md) e protótipos legados. Não afirmam conformidade com DTD oficial do CNPq nem autenticidade oficial. Todos os dados são 100% fictícios.",
+  "fixtures": [
+    {
+      "file": "curriculo_completo_valido.xml",
+      "encoding": "UTF-8",
+      "description": "Currículo sintético completo cobrindo as três seções com múltiplos registros válidos, acentuação e metadados de cabeçalho.",
+      "features_tested": [
+        "three_sections",
+        "accents",
+        "full_header",
+        "sequence_attributes",
+        "workload_hours_integer"
+      ],
+      "expected_counts": {
+        "academic": 2,
+        "complementary": 2,
+        "event": 1,
+        "total": 5
+      },
+      "expected_header": {
+        "lattes_id": "1111222233334444",
+        "updated_at": "15032025",
+        "full_name": "Helena de Souza Castanho",
+        "citation_names": [
+          "CASTANHO, H. S.",
+          "CASTANHO, Helena de Souza"
+        ],
+        "summary": "Pesquisadora fictícia em Engenharia de Software e Sistemas Distribuídos."
+      },
+      "expected_records": [
+        {
+          "index": 0,
+          "category": "FORMACAO_ACADEMICA",
+          "subtype": "GRADUACAO",
+          "sequence": "1",
+          "institution": "Universidade Federal Fluminense dos Rios",
+          "institution_acronym": "UFFR",
+          "title": "Engenharia de Computação",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2016,
+          "end_year": 2020,
+          "workload_hours": "3600",
+          "status": "CONCLUIDO",
+          "validation_code": null
+        },
+        {
+          "index": 1,
+          "category": "FORMACAO_ACADEMICA",
+          "subtype": "MESTRADO",
+          "sequence": "2",
+          "institution": "Instituto Tecnológico do Cerrado",
+          "institution_acronym": "ITC",
+          "title": "Ciência da Computação",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2021,
+          "end_year": 2023,
+          "workload_hours": "1200",
+          "status": "CONCLUIDO",
+          "validation_code": null
+        },
+        {
+          "index": 2,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "CURTA_DURACAO",
+          "sequence": "1",
+          "institution": "Fundação de Apoio à Tecnologia Educacional",
+          "institution_acronym": "FATE",
+          "title": "Mineração de Dados e Qualidade de Software",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2022,
+          "end_year": 2022,
+          "workload_hours": "60",
+          "status": "CONCLUIDO",
+          "validation_code": null
+        },
+        {
+          "index": 3,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "EXTENSAO_UNIVERSITARIA",
+          "sequence": "2",
+          "institution": "Universidade Federal Fluminense dos Rios",
+          "institution_acronym": "UFFR",
+          "title": "Desenvolvimento Seguro em Aplicações Web",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2023,
+          "end_year": 2023,
+          "workload_hours": "120",
+          "status": "CONCLUIDO",
+          "validation_code": null
+        },
+        {
+          "index": 4,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "CONGRESSO",
+          "sequence": "1",
+          "institution": "Sociedade Brasileira de Computação",
+          "institution_acronym": null,
+          "title": "Avaliação de Precisão em Parsing Estruturado",
+          "event_name": "Congresso Brasileiro de Engenharia de Software",
+          "city": "Curitiba",
+          "location": "Centro de Exposições ExpoParaná",
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "30",
+          "status": null,
+          "validation_code": null
+        }
+      ]
+    },
+    {
+      "file": "curriculo_carga_fracionaria.xml",
+      "encoding": "UTF-8",
+      "description": "Currículo sintético focado na preservação de cargas horárias fracionárias (incluindo 1.5 horas) sem truncamento silencioso.",
+      "features_tested": [
+        "fractional_workload_1_5",
+        "decimal_workload_40_75",
+        "event_with_fractional_hours"
+      ],
+      "expected_counts": {
+        "academic": 0,
+        "complementary": 2,
+        "event": 1,
+        "total": 3
+      },
+      "expected_header": {
+        "lattes_id": "2222333344445555",
+        "updated_at": "10012025",
+        "full_name": "Lucas Gabriel Paixão",
+        "citation_names": [
+          "PAIXÃO, L. G.",
+          "PAIXAO, Lucas Gabriel"
+        ],
+        "summary": "Pesquisador fictício com foco em experimentos de cargas horárias fracionárias."
+      },
+      "expected_records": [
+        {
+          "index": 0,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "CURTA_DURACAO",
+          "sequence": "1",
+          "institution": "Escola Técnica de Simulação Digital",
+          "institution_acronym": "ETSD",
+          "title": "Workshop de Introdução à Sintaxe XML",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "1.5",
+          "status": "CONCLUIDO",
+          "validation_code": null
+        },
+        {
+          "index": 1,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "EXTENSAO_UNIVERSITARIA",
+          "sequence": "2",
+          "institution": "Faculdade Integrada do Sertão",
+          "institution_acronym": "FIS",
+          "title": "Práticas Avançadas de Testes Automatizados",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "40.75",
+          "status": "CONCLUIDO",
+          "validation_code": null
+        },
+        {
+          "index": 2,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "SIMPOSIO",
+          "sequence": "1",
+          "institution": "Associação de Pesquisa em Computação Aplicada",
+          "institution_acronym": null,
+          "title": "Painel Rápido sobre Representação Numérica de Horas",
+          "event_name": "Simpósio Regional de Informática Teórica",
+          "city": "Recife",
+          "location": "Auditório do Centro Tecnológico",
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "1.5",
+          "status": null,
+          "validation_code": null
+        }
+      ]
+    },
+    {
+      "file": "curriculo_campos_ausentes.xml",
+      "encoding": "UTF-8",
+      "description": "Currículo sintético com campos ausentes, espaços em branco e estruturas esparsas para validar conversão estrita para None sem sentinelas inventadas.",
+      "features_tested": [
+        "missing_attributes_to_none",
+        "whitespace_normalization_to_none",
+        "empty_citations_list",
+        "missing_root_attributes",
+        "missing_summary"
+      ],
+      "expected_counts": {
+        "academic": 1,
+        "complementary": 1,
+        "event": 1,
+        "total": 3
+      },
+      "expected_header": {
+        "lattes_id": null,
+        "updated_at": null,
+        "full_name": null,
+        "citation_names": [],
+        "summary": null
+      },
+      "expected_records": [
+        {
+          "index": 0,
+          "category": "FORMACAO_ACADEMICA",
+          "subtype": "GRADUACAO",
+          "sequence": null,
+          "institution": null,
+          "institution_acronym": null,
+          "title": "Bacharelado em Matemática Fictícia",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": null,
+          "end_year": null,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null
+        },
+        {
+          "index": 1,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "OUTROS",
+          "sequence": null,
+          "institution": "Escola Aberta Virtual",
+          "institution_acronym": null,
+          "title": null,
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": null,
+          "end_year": null,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null
+        },
+        {
+          "index": 2,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "ENCONTRO",
+          "sequence": null,
+          "institution": null,
+          "institution_acronym": null,
+          "title": null,
+          "event_name": "Encontro Estadual de Inovação Aberta",
+          "city": "Manaus",
+          "location": null,
+          "start_year": 2023,
+          "end_year": 2023,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null
+        }
+      ]
+    },
+    {
+      "file": "curriculo_eventos_separacao.xml",
+      "encoding": "UTF-8",
+      "description": "Currículo sintético que exercita a separação rigorosa entre title vs event_name e institution vs city vs location na seção de eventos.",
+      "features_tested": [
+        "title_vs_event_name_separation",
+        "institution_separated_from_city_and_location",
+        "event_without_institution_keeps_none",
+        "event_without_title_keeps_none",
+        "parent_tag_direct_attributes_fallback"
+      ],
+      "expected_counts": {
+        "academic": 0,
+        "complementary": 0,
+        "event": 4,
+        "total": 4
+      },
+      "expected_header": {
+        "lattes_id": "3333444455556666",
+        "updated_at": "20022025",
+        "full_name": "Beatriz Vasconcelos Ribeiro",
+        "citation_names": [
+          "RIBEIRO, B. V.",
+          "VASCONCELOS, Beatriz"
+        ],
+        "summary": "Pesquisadora fictícia focada em validação de granularidade de eventos e metadados institucionais."
+      },
+      "expected_records": [
+        {
+          "index": 0,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "CONGRESSO",
+          "sequence": "1",
+          "institution": "Fundação Educacional Metropolitana",
+          "institution_acronym": null,
+          "title": "Arquitetura Hexagonal em Aplicações Educacionais",
+          "event_name": "Congresso Internacional de Tecnologia da Educação",
+          "city": "Belo Horizonte",
+          "location": "Palácio das Artes",
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "24",
+          "status": null,
+          "validation_code": null
+        },
+        {
+          "index": 1,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "SIMPOSIO",
+          "sequence": "2",
+          "institution": null,
+          "institution_acronym": null,
+          "title": "Extração Multimodal de Certificados Acadêmicos",
+          "event_name": "Simpósio Brasileiro de Processamento de Linguagem",
+          "city": "Belém",
+          "location": "Auditório Central do Campus Universitário",
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "16",
+          "status": null,
+          "validation_code": null
+        },
+        {
+          "index": 2,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "OFICINA",
+          "sequence": "3",
+          "institution": "Sociedade Brasileira para o Progresso da Ciência",
+          "institution_acronym": null,
+          "title": null,
+          "event_name": "Oficina de Escrita Científica para Graduandos",
+          "city": "São Paulo",
+          "location": "Espaço de Inovação Tecnológica",
+          "start_year": 2023,
+          "end_year": 2023,
+          "workload_hours": "8",
+          "status": null,
+          "validation_code": null
+        },
+        {
+          "index": 3,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "OUTRAS_PARTICIPACOES",
+          "sequence": "4",
+          "institution": "Consórcio Universitário Integrado",
+          "institution_acronym": null,
+          "title": "Mesa Redonda sobre Curricularização da Extensão",
+          "event_name": "Jornada de Ensino Superior",
+          "city": "Salvador",
+          "location": "Teatro Universitário",
+          "start_year": 2025,
+          "end_year": 2025,
+          "workload_hours": "4",
+          "status": null,
+          "validation_code": null
+        }
+      ]
+    },
+    {
+      "file": "curriculo_caracteres_acentuados.xml",
+      "encoding": "UTF-8",
+      "description": "Currículo sintético cobrindo acentuação em português (á, é, í, ó, ú, â, ê, ô, ã, õ, ç, etc.) e caracteres especiais em todas as seções.",
+      "features_tested": [
+        "utf8_portuguese_diacritics",
+        "escaped_xml_entities",
+        "accents_in_header",
+        "accents_in_all_sections"
+      ],
+      "expected_counts": {
+        "academic": 1,
+        "complementary": 1,
+        "event": 1,
+        "total": 3
+      },
+      "expected_header": {
+        "lattes_id": "4444555566667777",
+        "updated_at": "05042025",
+        "full_name": "Vitória Gonçalves da Conceição",
+        "citation_names": [
+          "CONCEIÇÃO, V. G.",
+          "GONÇALVES, Vitória"
+        ],
+        "summary": "Pesquisadora fictícia dedicada ao estudo de acentuação gráfica: á é í ó ú, à è ì ò ù, â ê î ô û, ã õ, ç Ç, ü Ü, ñ Ñ."
+      },
+      "expected_records": [
+        {
+          "index": 0,
+          "category": "FORMACAO_ACADEMICA",
+          "subtype": "ESPECIALIZACAO",
+          "sequence": "1",
+          "institution": "Centro Universitário Santo Agostinho de Marabá",
+          "institution_acronym": "UNISAM",
+          "title": "Gestão de Segurança da Informação & Governança",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2022,
+          "end_year": 2023,
+          "workload_hours": "360",
+          "status": "CONCLUIDO",
+          "validation_code": null
+        },
+        {
+          "index": 1,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "CURTA_DURACAO",
+          "sequence": "1",
+          "institution": "Fundação de Apoio à Capacitação Tecnológica de Goiás",
+          "institution_acronym": "FACT-GO",
+          "title": "Introdução à Análise Sintática & Detecção de Padrões",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2023,
+          "end_year": 2023,
+          "workload_hours": "40",
+          "status": "CONCLUIDO",
+          "validation_code": null
+        },
+        {
+          "index": 2,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "SIMPOSIO",
+          "sequence": "1",
+          "institution": "Núcleo de Pesquisa em Engenharia de Software do Maranhão",
+          "institution_acronym": null,
+          "title": "Contribuição à Resolução de Inconsistências em Certificados Eletrônicos",
+          "event_name": "Simpósio Maranhense de Computação e Inovação",
+          "city": "São Luís",
+          "location": "Espaço Cultural da Baixada Maranhense",
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "20",
+          "status": null,
+          "validation_code": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CURRICULO-VITAE SISTEMA-ORIGEM-XML="SINTETICO-TESTE" NUMERO-IDENTIFICADOR="9000444455556666" DATA-ATUALIZACAO="16042026">
+    <DADOS-GERAIS NOME-COMPLETO="Álvaro Conceição &amp; Guimarães" NOME-EM-CITACOES-BIBLIOGRAFICAS="GUIMARÃES, Á. C.; CONCEIÇÃO, Álvaro" NACIONALIDADE="B" SEXO="MASCULINO" PERMISSAO-DE-DIVULGACAO="SIM">
+        <RESUMO-CV TEXTO-RESUMO-CV-RH="Pesquisador fictício para testes de acentuação (á é í ó ú, à è ì ò ù, â ê î ô û, ã õ, ç Ç, ü Ü, ñ Ñ) e omissão de atributos opcionais." />
+        <FORMACAO-ACADEMICA-TITULACAO>
+            <GRADUACAO NOME-CURSO="Licenciatura em Computação &amp; Robótica" />
+        </FORMACAO-ACADEMICA-TITULACAO>
+    </DADOS-GERAIS>
+    <DADOS-COMPLEMENTARES>
+        <FORMACAO-COMPLEMENTAR>
+            <OUTROS NOME-INSTITUICAO="Fundação de Apoio à Capacitação Tecnológica de Goiás" CARGA-HORARIA="8.5" />
+        </FORMACAO-COMPLEMENTAR>
+        <PARTICIPACAO-EM-EVENTOS-CONGRESSOS>
+            <PARTICIPACAO-EM-ENCONTRO>
+                <DADOS-BASICOS-DA-PARTICIPACAO-EM-ENCONTRO ANO="2025" />
+                <DETALHAMENTO-DA-PARTICIPACAO-EM-ENCONTRO NOME-DO-EVENTO="Encontro Paraense de Acentuação &amp; Codificação" CIDADE-DO-EVENTO="São Luís" />
+            </PARTICIPACAO-EM-ENCONTRO>
+        </PARTICIPACAO-EM-EVENTOS-CONGRESSOS>
+    </DADOS-COMPLEMENTARES>
+</CURRICULO-VITAE>

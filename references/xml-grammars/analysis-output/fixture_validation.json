@@ -1,0 +1,489 @@
+{
+ "curriculo_campos_ausentes.xml": {
+  "sha256": "dd24216d6e340904898c2aeb86963a75a0bf96fc771173d85471506bceecae64",
+  "bytes": 854,
+  "has_doctype": false,
+  "has_entity_decl": false,
+  "root": "CURRICULO-VITAE",
+  "sections": {
+   "FORMACAO-ACADEMICA-TITULACAO": 1,
+   "FORMACAO-COMPLEMENTAR": 1,
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": 1
+  },
+  "section_parents": {
+   "FORMACAO-ACADEMICA-TITULACAO": [
+    "DADOS-GERAIS"
+   ],
+   "FORMACAO-COMPLEMENTAR": [
+    "DADOS-COMPLEMENTARES"
+   ],
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": [
+    "DADOS-COMPLEMENTARES"
+   ]
+  },
+  "xsd_valid": false,
+  "xsd_errors": [
+   {
+    "line": 2,
+    "msg": "Element 'CURRICULO-VITAE': The attribute 'SISTEMA-ORIGEM-XML' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'NACIONALIDADE' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'PERMISSAO-DE-DIVULGACAO' is required but missing."
+   },
+   {
+    "line": 10,
+    "msg": "Element 'OUTROS-TIPOS-DE-FORMACAO-COMPLEMENTAR': This element is not expected. Expected is one of ( FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA, MBA, FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO, OUTROS )."
+   }
+  ],
+  "dtd_valid": false,
+  "dtd_errors": [
+   {
+    "line": 2,
+    "msg": "Element CURRICULO-VITAE does not carry attribute SISTEMA-ORIGEM-XML"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute PERMISSAO-DE-DIVULGACAO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute SEXO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute NACIONALIDADE"
+   },
+   {
+    "line": 9,
+    "msg": "Element FORMACAO-COMPLEMENTAR content does not follow the DTD, expecting (FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA* , MBA* , FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO* , OUTROS*), got (OUTROS-TIPOS-DE-FORMACAO-COMPLEMENTAR )"
+   },
+   {
+    "line": 10,
+    "msg": "No declaration for element OUTROS-TIPOS-DE-FORMACAO-COMPLEMENTAR"
+   },
+   {
+    "line": 10,
+    "msg": "No declaration for attribute NOME-INSTITUICAO of element OUTROS-TIPOS-DE-FORMACAO-COMPLEMENTAR"
+   }
+  ]
+ },
+ "curriculo_caracteres_acentuados.xml": {
+  "sha256": "4226e8e7fce1b084f2224b36ca0093449c2b10598b2f138145bffe5e7e5b81d8",
+  "bytes": 1956,
+  "has_doctype": false,
+  "has_entity_decl": false,
+  "root": "CURRICULO-VITAE",
+  "sections": {
+   "FORMACAO-ACADEMICA-TITULACAO": 1,
+   "FORMACAO-COMPLEMENTAR": 1,
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": 1
+  },
+  "section_parents": {
+   "FORMACAO-ACADEMICA-TITULACAO": [
+    "DADOS-GERAIS"
+   ],
+   "FORMACAO-COMPLEMENTAR": [
+    "DADOS-COMPLEMENTARES"
+   ],
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": [
+    "DADOS-COMPLEMENTARES"
+   ]
+  },
+  "xsd_valid": false,
+  "xsd_errors": [
+   {
+    "line": 2,
+    "msg": "Element 'CURRICULO-VITAE': The attribute 'SISTEMA-ORIGEM-XML' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'NACIONALIDADE' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'PERMISSAO-DE-DIVULGACAO' is required but missing."
+   },
+   {
+    "line": 6,
+    "msg": "Element 'ESPECIALIZACAO', attribute 'SIGLA-INSTITUICAO': The attribute 'SIGLA-INSTITUICAO' is not allowed."
+   },
+   {
+    "line": 11,
+    "msg": "Element 'FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO', attribute 'SIGLA-INSTITUICAO': The attribute 'SIGLA-INSTITUICAO' is not allowed."
+   },
+   {
+    "line": 16,
+    "msg": "Element 'DETALHAMENTO-DA-PARTICIPACAO-EM-SIMPOSIO', attribute 'CARGA-HORARIA': The attribute 'CARGA-HORARIA' is not allowed."
+   }
+  ],
+  "dtd_valid": false,
+  "dtd_errors": [
+   {
+    "line": 2,
+    "msg": "Element CURRICULO-VITAE does not carry attribute SISTEMA-ORIGEM-XML"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute PERMISSAO-DE-DIVULGACAO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute SEXO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute NACIONALIDADE"
+   },
+   {
+    "line": 6,
+    "msg": "No declaration for attribute SIGLA-INSTITUICAO of element ESPECIALIZACAO"
+   },
+   {
+    "line": 11,
+    "msg": "No declaration for attribute SIGLA-INSTITUICAO of element FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO"
+   },
+   {
+    "line": 16,
+    "msg": "No declaration for attribute CARGA-HORARIA of element DETALHAMENTO-DA-PARTICIPACAO-EM-SIMPOSIO"
+   }
+  ]
+ },
+ "curriculo_carga_fracionaria.xml": {
+  "sha256": "7133d8405939cda8e6840724cd3ef0e1b330c71b6847c3f720186fe3adf4cae1",
+  "bytes": 1716,
+  "has_doctype": false,
+  "has_entity_decl": false,
+  "root": "CURRICULO-VITAE",
+  "sections": {
+   "FORMACAO-ACADEMICA-TITULACAO": 0,
+   "FORMACAO-COMPLEMENTAR": 1,
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": 1
+  },
+  "section_parents": {
+   "FORMACAO-ACADEMICA-TITULACAO": [],
+   "FORMACAO-COMPLEMENTAR": [
+    "DADOS-COMPLEMENTARES"
+   ],
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": [
+    "DADOS-COMPLEMENTARES"
+   ]
+  },
+  "xsd_valid": false,
+  "xsd_errors": [
+   {
+    "line": 2,
+    "msg": "Element 'CURRICULO-VITAE': The attribute 'SISTEMA-ORIGEM-XML' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'NACIONALIDADE' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'PERMISSAO-DE-DIVULGACAO' is required but missing."
+   },
+   {
+    "line": 8,
+    "msg": "Element 'FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO', attribute 'SIGLA-INSTITUICAO': The attribute 'SIGLA-INSTITUICAO' is not allowed."
+   },
+   {
+    "line": 9,
+    "msg": "Element 'FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA': This element is not expected. Expected is one of ( FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO, OUTROS )."
+   },
+   {
+    "line": 14,
+    "msg": "Element 'DETALHAMENTO-DA-PARTICIPACAO-EM-SIMPOSIO', attribute 'CARGA-HORARIA': The attribute 'CARGA-HORARIA' is not allowed."
+   }
+  ],
+  "dtd_valid": false,
+  "dtd_errors": [
+   {
+    "line": 2,
+    "msg": "Element CURRICULO-VITAE does not carry attribute SISTEMA-ORIGEM-XML"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute PERMISSAO-DE-DIVULGACAO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute SEXO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute NACIONALIDADE"
+   },
+   {
+    "line": 7,
+    "msg": "Element FORMACAO-COMPLEMENTAR content does not follow the DTD, expecting (FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA* , MBA* , FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO* , OUTROS*), got (FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA )"
+   },
+   {
+    "line": 8,
+    "msg": "No declaration for attribute SIGLA-INSTITUICAO of element FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO"
+   },
+   {
+    "line": 9,
+    "msg": "No declaration for attribute SIGLA-INSTITUICAO of element FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA"
+   },
+   {
+    "line": 14,
+    "msg": "No declaration for attribute CARGA-HORARIA of element DETALHAMENTO-DA-PARTICIPACAO-EM-SIMPOSIO"
+   }
+  ]
+ },
+ "curriculo_completo_valido.xml": {
+  "sha256": "586144a6b6e08ff57eee2a5ccebd577f44204cb25c25048fa0b13cfc21904e61",
+  "bytes": 2448,
+  "has_doctype": false,
+  "has_entity_decl": false,
+  "root": "CURRICULO-VITAE",
+  "sections": {
+   "FORMACAO-ACADEMICA-TITULACAO": 1,
+   "FORMACAO-COMPLEMENTAR": 1,
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": 1
+  },
+  "section_parents": {
+   "FORMACAO-ACADEMICA-TITULACAO": [
+    "DADOS-GERAIS"
+   ],
+   "FORMACAO-COMPLEMENTAR": [
+    "DADOS-COMPLEMENTARES"
+   ],
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": [
+    "DADOS-COMPLEMENTARES"
+   ]
+  },
+  "xsd_valid": false,
+  "xsd_errors": [
+   {
+    "line": 2,
+    "msg": "Element 'CURRICULO-VITAE': The attribute 'SISTEMA-ORIGEM-XML' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'NACIONALIDADE' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'PERMISSAO-DE-DIVULGACAO' is required but missing."
+   },
+   {
+    "line": 6,
+    "msg": "Element 'GRADUACAO', attribute 'SIGLA-INSTITUICAO': The attribute 'SIGLA-INSTITUICAO' is not allowed."
+   },
+   {
+    "line": 6,
+    "msg": "Element 'GRADUACAO', attribute 'CARGA-HORARIA': The attribute 'CARGA-HORARIA' is not allowed."
+   },
+   {
+    "line": 7,
+    "msg": "Element 'MESTRADO', attribute 'SIGLA-INSTITUICAO': The attribute 'SIGLA-INSTITUICAO' is not allowed."
+   },
+   {
+    "line": 7,
+    "msg": "Element 'MESTRADO', attribute 'CARGA-HORARIA': The attribute 'CARGA-HORARIA' is not allowed."
+   },
+   {
+    "line": 12,
+    "msg": "Element 'FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO', attribute 'SIGLA-INSTITUICAO': The attribute 'SIGLA-INSTITUICAO' is not allowed."
+   },
+   {
+    "line": 13,
+    "msg": "Element 'FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA': This element is not expected. Expected is one of ( FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO, OUTROS )."
+   },
+   {
+    "line": 18,
+    "msg": "Element 'DETALHAMENTO-DA-PARTICIPACAO-EM-CONGRESSO', attribute 'CARGA-HORARIA': The attribute 'CARGA-HORARIA' is not allowed."
+   }
+  ],
+  "dtd_valid": false,
+  "dtd_errors": [
+   {
+    "line": 2,
+    "msg": "Element CURRICULO-VITAE does not carry attribute SISTEMA-ORIGEM-XML"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute PERMISSAO-DE-DIVULGACAO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute SEXO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute NACIONALIDADE"
+   },
+   {
+    "line": 6,
+    "msg": "No declaration for attribute SIGLA-INSTITUICAO of element GRADUACAO"
+   },
+   {
+    "line": 6,
+    "msg": "No declaration for attribute CARGA-HORARIA of element GRADUACAO"
+   },
+   {
+    "line": 7,
+    "msg": "No declaration for attribute SIGLA-INSTITUICAO of element MESTRADO"
+   },
+   {
+    "line": 7,
+    "msg": "No declaration for attribute CARGA-HORARIA of element MESTRADO"
+   },
+   {
+    "line": 11,
+    "msg": "Element FORMACAO-COMPLEMENTAR content does not follow the DTD, expecting (FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA* , MBA* , FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO* , OUTROS*), got (FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA )"
+   },
+   {
+    "line": 12,
+    "msg": "No declaration for attribute SIGLA-INSTITUICAO of element FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO"
+   },
+   {
+    "line": 13,
+    "msg": "No declaration for attribute SIGLA-INSTITUICAO of element FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA"
+   },
+   {
+    "line": 18,
+    "msg": "No declaration for attribute CARGA-HORARIA of element DETALHAMENTO-DA-PARTICIPACAO-EM-CONGRESSO"
+   }
+  ]
+ },
+ "curriculo_eventos_separacao.xml": {
+  "sha256": "74aed18cfa669f59b1a00f98696b78498f3887c7bf389e4777eb36057c063bfc",
+  "bytes": 2266,
+  "has_doctype": false,
+  "has_entity_decl": false,
+  "root": "CURRICULO-VITAE",
+  "sections": {
+   "FORMACAO-ACADEMICA-TITULACAO": 0,
+   "FORMACAO-COMPLEMENTAR": 0,
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": 1
+  },
+  "section_parents": {
+   "FORMACAO-ACADEMICA-TITULACAO": [],
+   "FORMACAO-COMPLEMENTAR": [],
+   "PARTICIPACAO-EM-EVENTOS-CONGRESSOS": [
+    "DADOS-COMPLEMENTARES"
+   ]
+  },
+  "xsd_valid": false,
+  "xsd_errors": [
+   {
+    "line": 2,
+    "msg": "Element 'CURRICULO-VITAE': The attribute 'SISTEMA-ORIGEM-XML' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'NACIONALIDADE' is required but missing."
+   },
+   {
+    "line": 3,
+    "msg": "Element 'DADOS-GERAIS': The attribute 'PERMISSAO-DE-DIVULGACAO' is required but missing."
+   },
+   {
+    "line": 10,
+    "msg": "Element 'DETALHAMENTO-DA-PARTICIPACAO-EM-CONGRESSO', attribute 'CARGA-HORARIA': The attribute 'CARGA-HORARIA' is not allowed."
+   },
+   {
+    "line": 14,
+    "msg": "Element 'DETALHAMENTO-DA-PARTICIPACAO-EM-SIMPOSIO', attribute 'CARGA-HORARIA': The attribute 'CARGA-HORARIA' is not allowed."
+   },
+   {
+    "line": 18,
+    "msg": "Element 'DETALHAMENTO-DA-PARTICIPACAO-EM-OFICINA', attribute 'CARGA-HORARIA': The attribute 'CARGA-HORARIA' is not allowed."
+   },
+   {
+    "line": 20,
+    "msg": "Element 'OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS', attribute 'TITULO': The attribute 'TITULO' is not allowed."
+   },
+   {
+    "line": 20,
+    "msg": "Element 'OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS', attribute 'NOME-DO-EVENTO': The attribute 'NOME-DO-EVENTO' is not allowed."
+   },
+   {
+    "line": 20,
+    "msg": "Element 'OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS', attribute 'NOME-INSTITUICAO': The attribute 'NOME-INSTITUICAO' is not allowed."
+   },
+   {
+    "line": 20,
+    "msg": "Element 'OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS', attribute 'CIDADE-DO-EVENTO': The attribute 'CIDADE-DO-EVENTO' is not allowed."
+   },
+   {
+    "line": 20,
+    "msg": "Element 'OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS', attribute 'LOCAL-DO-EVENTO': The attribute 'LOCAL-DO-EVENTO' is not allowed."
+   },
+   {
+    "line": 20,
+    "msg": "Element 'OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS', attribute 'ANO': The attribute 'ANO' is not allowed."
+   },
+   {
+    "line": 20,
+    "msg": "Element 'OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS', attribute 'CARGA-HORARIA': The attribute 'CARGA-HORARIA' is not allowed."
+   }
+  ],
+  "dtd_valid": false,
+  "dtd_errors": [
+   {
+    "line": 2,
+    "msg": "Element CURRICULO-VITAE does not carry attribute SISTEMA-ORIGEM-XML"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute PERMISSAO-DE-DIVULGACAO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute SEXO"
+   },
+   {
+    "line": 3,
+    "msg": "Element DADOS-GERAIS does not carry attribute NACIONALIDADE"
+   },
+   {
+    "line": 10,
+    "msg": "No declaration for attribute CARGA-HORARIA of element DETALHAMENTO-DA-PARTICIPACAO-EM-CONGRESSO"
+   },
+   {
+    "line": 14,
+    "msg": "No declaration for attribute CARGA-HORARIA of element DETALHAMENTO-DA-PARTICIPACAO-EM-SIMPOSIO"
+   },
+   {
+    "line": 18,
+    "msg": "No declaration for attribute CARGA-HORARIA of element DETALHAMENTO-DA-PARTICIPACAO-EM-OFICINA"
+   },
+   {
+    "line": 20,
+    "msg": "No declaration for attribute TITULO of element OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS"
+   },
+   {
+    "line": 20,
+    "msg": "No declaration for attribute NOME-DO-EVENTO of element OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS"
+   },
+   {
+    "line": 20,
+    "msg": "No declaration for attribute NOME-INSTITUICAO of element OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS"
+   },
+   {
+    "line": 20,
+    "msg": "No declaration for attribute CIDADE-DO-EVENTO of element OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS"
+   },
+   {
+    "line": 20,
+    "msg": "No declaration for attribute LOCAL-DO-EVENTO of element OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS"
+   },
+   {
+    "line": 20,
+    "msg": "No declaration for attribute ANO of element OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS"
+   },
+   {
+    "line": 20,
+    "msg": "No declaration for attribute CARGA-HORARIA of element OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS"
+   }
+  ]
+ }
+}

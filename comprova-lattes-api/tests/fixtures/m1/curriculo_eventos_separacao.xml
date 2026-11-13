@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CURRICULO-VITAE NUMERO-IDENTIFICADOR="3333444455556666" DATA-ATUALIZACAO="20022025">
+  <DADOS-GERAIS NOME-COMPLETO="Beatriz Vasconcelos Ribeiro" NOME-EM-CITACOES-BIBLIOGRAFICAS="RIBEIRO, B. V.;VASCONCELOS, Beatriz">
+    <RESUMO-CV TEXTO-RESUMO-CV-RH="Pesquisadora fictícia focada em validação de granularidade de eventos e metadados institucionais." />
+  </DADOS-GERAIS>
+  <DADOS-COMPLEMENTARES>
+    <PARTICIPACAO-EM-EVENTOS-CONGRESSOS>
+      <PARTICIPACAO-EM-CONGRESSO SEQUENCIA-PRODUCAO="1">
+        <DADOS-BASICOS-DA-PARTICIPACAO-EM-CONGRESSO TITULO="Arquitetura Hexagonal em Aplicações Educacionais" ANO="2024" />
+        <DETALHAMENTO-DA-PARTICIPACAO-EM-CONGRESSO NOME-DO-EVENTO="Congresso Internacional de Tecnologia da Educação" NOME-INSTITUICAO="Fundação Educacional Metropolitana" CIDADE-DO-EVENTO="Belo Horizonte" LOCAL-DO-EVENTO="Palácio das Artes" CARGA-HORARIA="24" />
+      </PARTICIPACAO-EM-CONGRESSO>
+      <PARTICIPACAO-EM-SIMPOSIO SEQUENCIA-PRODUCAO="2">
+        <DADOS-BASICOS-DA-PARTICIPACAO-EM-SIMPOSIO TITULO="Extração Multimodal de Certificados Acadêmicos" ANO="2024" />
+        <DETALHAMENTO-DA-PARTICIPACAO-EM-SIMPOSIO NOME-DO-EVENTO="Simpósio Brasileiro de Processamento de Linguagem" CIDADE-DO-EVENTO="Belém" LOCAL-DO-EVENTO="Auditório Central do Campus Universitário" CARGA-HORARIA="16" />
+      </PARTICIPACAO-EM-SIMPOSIO>
+      <PARTICIPACAO-EM-OFICINA SEQUENCIA-PRODUCAO="3">
+        <DADOS-BASICOS-DA-PARTICIPACAO-EM-OFICINA ANO="2023" />
+        <DETALHAMENTO-DA-PARTICIPACAO-EM-OFICINA NOME-DO-EVENTO="Oficina de Escrita Científica para Graduandos" NOME-INSTITUICAO="Sociedade Brasileira para o Progresso da Ciência" CIDADE-DO-EVENTO="São Paulo" LOCAL-DO-EVENTO="Espaço de Inovação Tecnológica" CARGA-HORARIA="8" />
+      </PARTICIPACAO-EM-OFICINA>
+      <OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS SEQUENCIA-PRODUCAO="4" TITULO="Mesa Redonda sobre Curricularização da Extensão" NOME-DO-EVENTO="Jornada de Ensino Superior" NOME-INSTITUICAO="Consórcio Universitário Integrado" CIDADE-DO-EVENTO="Salvador" LOCAL-DO-EVENTO="Teatro Universitário" ANO="2025" CARGA-HORARIA="4" />
+    </PARTICIPACAO-EM-EVENTOS-CONGRESSOS>
+  </DADOS-COMPLEMENTARES>
+</CURRICULO-VITAE>

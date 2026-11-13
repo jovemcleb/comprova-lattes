@@ -1,0 +1,572 @@
+{
+  "manifest_version": "1.0.0",
+  "scope": "M1-Parser-Conformant-Fixtures",
+  "generated_at": "2026-11-13",
+  "encoding_standard": "UTF-8",
+  "grammar_reference": "references/xml-grammars/cnpq-official/xml_cvbase_src_main_resources_CurriculoLattes_12_09_2022.xsd (AD-011)",
+  "provenance_statement": "Fixtures sintéticas criadas do zero com dados 100% fictícios, conformes ao XSD oficial do Extrator CNPq (12/09/2022). Não afirmam equivalência integral com a exportação da interface web do Lattes nem autenticidade oficial.",
+  "fixtures": [
+    {
+      "file": "curriculo_conformante_completo.xml",
+      "encoding": "UTF-8",
+      "xsd_valid_expected": true,
+      "dtd_valid_expected": true,
+      "description": "Currículo sintético conforme ao XSD (e compatível com a DTD comunitária) cobrindo as três seções, cabeçalho obrigatório completo, ordem válida e acentuação.",
+      "features_tested": [
+        "xsd_required_header",
+        "three_sections",
+        "valid_element_ordering",
+        "no_sigla_instituicao",
+        "workload_only_where_declared",
+        "accents_and_xml_entities"
+      ],
+      "expected_counts": {
+        "academic": 3,
+        "complementary": 2,
+        "event": 1,
+        "total": 6
+      },
+      "expected_header": {
+        "lattes_id": "9000111122223333",
+        "updated_at": "14042026",
+        "full_name": "Clara Mendes Albuquerque",
+        "citation_names": [
+          "ALBUQUERQUE, C. M.",
+          "MENDES, Clara"
+        ],
+        "summary": "Pesquisadora fictícia em Engenharia de Software, Auditoria Documental & Sistemas Distribuídos."
+      },
+      "expected_records": [
+        {
+          "index": 0,
+          "category": "FORMACAO_ACADEMICA",
+          "subtype": "GRADUACAO",
+          "sequence": "1",
+          "institution": "Universidade Estadual do Vale Amazônico",
+          "institution_acronym": null,
+          "title": "Sistemas de Informação & Gestão",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2015,
+          "end_year": 2019,
+          "workload_hours": null,
+          "status": "CONCLUIDO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-GERAIS",
+            "section_tag": "FORMACAO-ACADEMICA-TITULACAO",
+            "record_tag": "GRADUACAO",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 1,
+          "category": "FORMACAO_ACADEMICA",
+          "subtype": "ESPECIALIZACAO",
+          "sequence": "2",
+          "institution": "Instituto Superior de Educação Tecnológica",
+          "institution_acronym": null,
+          "title": "Engenharia de Dados Aplicada",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2020,
+          "end_year": 2021,
+          "workload_hours": "360",
+          "status": "CONCLUIDO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-GERAIS",
+            "section_tag": "FORMACAO-ACADEMICA-TITULACAO",
+            "record_tag": "ESPECIALIZACAO",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 2,
+          "category": "FORMACAO_ACADEMICA",
+          "subtype": "MESTRADO",
+          "sequence": "3",
+          "institution": "Centro Acadêmico de Pesquisa do Pará",
+          "institution_acronym": null,
+          "title": "Ciência da Computação",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2022,
+          "end_year": 2024,
+          "workload_hours": null,
+          "status": "CONCLUIDO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-GERAIS",
+            "section_tag": "FORMACAO-ACADEMICA-TITULACAO",
+            "record_tag": "MESTRADO",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 3,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "EXTENSAO_UNIVERSITARIA",
+          "sequence": "1",
+          "institution": "Universidade Estadual do Vale Amazônico",
+          "institution_acronym": null,
+          "title": "Extensão em Segurança de Documentos Digitais",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2023,
+          "end_year": 2023,
+          "workload_hours": "40",
+          "status": "CONCLUIDO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "FORMACAO-COMPLEMENTAR",
+            "record_tag": "FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 4,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "CURTA_DURACAO",
+          "sequence": "2",
+          "institution": "Escola Politécnica da Floresta",
+          "institution_acronym": null,
+          "title": "Introdução à Validação Estrutural XML & JSON",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "20",
+          "status": "CONCLUIDO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "FORMACAO-COMPLEMENTAR",
+            "record_tag": "FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 5,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "CONGRESSO",
+          "sequence": "1",
+          "institution": "Sociedade Regional de Tecnologia",
+          "institution_acronym": null,
+          "title": "Rastreabilidade em Auditoria Curricular",
+          "event_name": "Congresso Norte de Computação & Informação",
+          "city": "Santarém",
+          "location": "Auditório Tapajós",
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "PARTICIPACAO-EM-EVENTOS-CONGRESSOS",
+            "record_tag": "PARTICIPACAO-EM-CONGRESSO",
+            "sequence_attribute": "SEQUENCIA-PRODUCAO"
+          }
+        }
+      ]
+    },
+    {
+      "file": "curriculo_conformante_carga_fracionaria.xml",
+      "encoding": "UTF-8",
+      "xsd_valid_expected": true,
+      "dtd_valid_expected": true,
+      "description": "Currículo sintético conforme exercitando horas fracionárias estritamente onde o XSD declara CARGA-HORARIA (APERFEICOAMENTO e todas as 4 tags de FORMACAO-COMPLEMENTAR na ordem correta), mantendo evento sem carga horária.",
+      "features_tested": [
+        "fractional_workload_aperfeicoamento",
+        "fractional_workload_complementary_all_tags",
+        "complementary_sequence_order",
+        "event_without_workload_hours"
+      ],
+      "expected_counts": {
+        "academic": 1,
+        "complementary": 4,
+        "event": 1,
+        "total": 6
+      },
+      "expected_header": {
+        "lattes_id": "9000222233334444",
+        "updated_at": "15042026",
+        "full_name": "Rafael Monteiro da Costa",
+        "citation_names": [
+          "COSTA, R. M.",
+          "MONTEIRO, Rafael"
+        ],
+        "summary": "Pesquisador fictício para validação de carga horária fracionária nos elementos permitidos pelo XSD."
+      },
+      "expected_records": [
+        {
+          "index": 0,
+          "category": "FORMACAO_ACADEMICA",
+          "subtype": "APERFEICOAMENTO",
+          "sequence": "1",
+          "institution": "Instituto de Estudos Avançados do Tocantins",
+          "institution_acronym": null,
+          "title": "Aperfeiçoamento em Métodos Quantitativos",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2022,
+          "end_year": 2022,
+          "workload_hours": "180.5",
+          "status": "CONCLUIDO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-GERAIS",
+            "section_tag": "FORMACAO-ACADEMICA-TITULACAO",
+            "record_tag": "APERFEICOAMENTO",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 1,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "EXTENSAO_UNIVERSITARIA",
+          "sequence": "1",
+          "institution": "Faculdade Integrada do Araguaia",
+          "institution_acronym": null,
+          "title": "Práticas Avançadas de Testes Automatizados",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2023,
+          "end_year": 2023,
+          "workload_hours": "40.75",
+          "status": "CONCLUIDO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "FORMACAO-COMPLEMENTAR",
+            "record_tag": "FORMACAO-COMPLEMENTAR-DE-EXTENSAO-UNIVERSITARIA",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 2,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "MBA",
+          "sequence": "2",
+          "institution": "Escola de Negócios Amazônica",
+          "institution_acronym": null,
+          "title": "MBA em Governança de Dados",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2023,
+          "end_year": 2024,
+          "workload_hours": "360",
+          "status": "CONCLUIDO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "FORMACAO-COMPLEMENTAR",
+            "record_tag": "MBA",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 3,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "CURTA_DURACAO",
+          "sequence": "3",
+          "institution": "Núcleo Técnico de Simulação Digital",
+          "institution_acronym": null,
+          "title": "Oficina de Sintaxe XML Segura",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "1.5",
+          "status": "CONCLUIDO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "FORMACAO-COMPLEMENTAR",
+            "record_tag": "FORMACAO-COMPLEMENTAR-CURSO-DE-CURTA-DURACAO",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 4,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "OUTROS",
+          "sequence": "4",
+          "institution": "Centro Aberto de Formação Contínua",
+          "institution_acronym": null,
+          "title": "Seminário de Integridade Científica",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": "12.25",
+          "status": "EM_ANDAMENTO",
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "FORMACAO-COMPLEMENTAR",
+            "record_tag": "OUTROS",
+            "sequence_attribute": "SEQUENCIA-FORMACAO"
+          }
+        },
+        {
+          "index": 5,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "SIMPOSIO",
+          "sequence": "1",
+          "institution": "Associação Norte de Pesquisa",
+          "institution_acronym": null,
+          "title": "Representação Decimal Exata em Auditoria Acadêmica",
+          "event_name": "Simpósio Regional de Computação Aplicada",
+          "city": "Marabá",
+          "location": "Campus II - Bloco Central",
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "PARTICIPACAO-EM-EVENTOS-CONGRESSOS",
+            "record_tag": "PARTICIPACAO-EM-SIMPOSIO",
+            "sequence_attribute": "SEQUENCIA-PRODUCAO"
+          }
+        }
+      ]
+    },
+    {
+      "file": "curriculo_conformante_eventos_subnos.xml",
+      "encoding": "UTF-8",
+      "xsd_valid_expected": true,
+      "dtd_valid_expected": false,
+      "description": "Currículo sintético conforme ao XSD exercitando eventos exclusivamente via subnós DADOS-BASICOS-* e DETALHAMENTO-* (incluindo PARTICIPACAO-EM-FEIRA e OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS), sem CARGA-HORARIA nem atributos no nó pai além de SEQUENCIA-PRODUCAO.",
+      "features_tested": [
+        "xsd_only_event_tag_feira",
+        "xsd_only_optional_sexo_omitted",
+        "subnodes_only_outras_participacoes",
+        "institution_separated_from_city_and_location",
+        "missing_optional_title_and_institution"
+      ],
+      "expected_counts": {
+        "academic": 0,
+        "complementary": 0,
+        "event": 4,
+        "total": 4
+      },
+      "expected_header": {
+        "lattes_id": null,
+        "updated_at": null,
+        "full_name": "Juliana Nogueira Tavares",
+        "citation_names": [
+          "TAVARES, J. N."
+        ],
+        "summary": null
+      },
+      "expected_records": [
+        {
+          "index": 0,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "FEIRA",
+          "sequence": "1",
+          "institution": "Fundação de Fomento Estadual",
+          "institution_acronym": null,
+          "title": "Protótipo de Validação Documental",
+          "event_name": "Feira Amazônica de Ciência e Tecnologia",
+          "city": "Belém",
+          "location": "Estação das Docas",
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "PARTICIPACAO-EM-EVENTOS-CONGRESSOS",
+            "record_tag": "PARTICIPACAO-EM-FEIRA",
+            "sequence_attribute": "SEQUENCIA-PRODUCAO"
+          }
+        },
+        {
+          "index": 1,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "SEMINARIO",
+          "sequence": "2",
+          "institution": null,
+          "institution_acronym": null,
+          "title": "Extração Estruturada de Certificados",
+          "event_name": "Seminário de Processamento de Linguagem",
+          "city": "Macapá",
+          "location": "Auditório Central Universitário",
+          "start_year": 2024,
+          "end_year": 2024,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "PARTICIPACAO-EM-EVENTOS-CONGRESSOS",
+            "record_tag": "PARTICIPACAO-EM-SEMINARIO",
+            "sequence_attribute": "SEQUENCIA-PRODUCAO"
+          }
+        },
+        {
+          "index": 2,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "OFICINA",
+          "sequence": "3",
+          "institution": "Sociedade Brasileira de Métodos Formais",
+          "institution_acronym": null,
+          "title": null,
+          "event_name": "Oficina de Redação Científica",
+          "city": "Manaus",
+          "location": "Sala de Inovação 3",
+          "start_year": 2023,
+          "end_year": 2023,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "PARTICIPACAO-EM-EVENTOS-CONGRESSOS",
+            "record_tag": "PARTICIPACAO-EM-OFICINA",
+            "sequence_attribute": "SEQUENCIA-PRODUCAO"
+          }
+        },
+        {
+          "index": 3,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "OUTRAS_PARTICIPACOES",
+          "sequence": "4",
+          "institution": "Consórcio Universitário do Norte",
+          "institution_acronym": null,
+          "title": "Mesa Redonda sobre Curricularização da Extensão",
+          "event_name": "Jornada Integrada de Ensino Superior",
+          "city": "Palmas",
+          "location": "Teatro Universitário",
+          "start_year": 2025,
+          "end_year": 2025,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "PARTICIPACAO-EM-EVENTOS-CONGRESSOS",
+            "record_tag": "OUTRAS-PARTICIPACOES-EM-EVENTOS-CONGRESSOS",
+            "sequence_attribute": "SEQUENCIA-PRODUCAO"
+          }
+        }
+      ]
+    },
+    {
+      "file": "curriculo_conformante_acentuacao_campos_opcionais.xml",
+      "encoding": "UTF-8",
+      "xsd_valid_expected": true,
+      "dtd_valid_expected": true,
+      "description": "Currículo sintético conforme para estresse de acentuação (UTF-8 e ISO-8859-1) e omissão de atributos opcionais mantendo cabeçalho obrigatório válido.",
+      "features_tested": [
+        "portuguese_diacritics_latin1_compatible",
+        "escaped_xml_entities",
+        "optional_record_attributes_omitted_to_none"
+      ],
+      "expected_counts": {
+        "academic": 1,
+        "complementary": 1,
+        "event": 1,
+        "total": 3
+      },
+      "expected_header": {
+        "lattes_id": "9000444455556666",
+        "updated_at": "16042026",
+        "full_name": "Álvaro Conceição & Guimarães",
+        "citation_names": [
+          "GUIMARÃES, Á. C.",
+          "CONCEIÇÃO, Álvaro"
+        ],
+        "summary": "Pesquisador fictício para testes de acentuação (á é í ó ú, à è ì ò ù, â ê î ô û, ã õ, ç Ç, ü Ü, ñ Ñ) e omissão de atributos opcionais."
+      },
+      "expected_records": [
+        {
+          "index": 0,
+          "category": "FORMACAO_ACADEMICA",
+          "subtype": "GRADUACAO",
+          "sequence": null,
+          "institution": null,
+          "institution_acronym": null,
+          "title": "Licenciatura em Computação & Robótica",
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": null,
+          "end_year": null,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-GERAIS",
+            "section_tag": "FORMACAO-ACADEMICA-TITULACAO",
+            "record_tag": "GRADUACAO",
+            "sequence_attribute": null
+          }
+        },
+        {
+          "index": 1,
+          "category": "FORMACAO_COMPLEMENTAR",
+          "subtype": "OUTROS",
+          "sequence": null,
+          "institution": "Fundação de Apoio à Capacitação Tecnológica de Goiás",
+          "institution_acronym": null,
+          "title": null,
+          "event_name": null,
+          "city": null,
+          "location": null,
+          "start_year": null,
+          "end_year": null,
+          "workload_hours": "8.5",
+          "status": null,
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "FORMACAO-COMPLEMENTAR",
+            "record_tag": "OUTROS",
+            "sequence_attribute": null
+          }
+        },
+        {
+          "index": 2,
+          "category": "PARTICIPACAO_EVENTO",
+          "subtype": "ENCONTRO",
+          "sequence": null,
+          "institution": null,
+          "institution_acronym": null,
+          "title": null,
+          "event_name": "Encontro Paraense de Acentuação & Codificação",
+          "city": "São Luís",
+          "location": null,
+          "start_year": 2025,
+          "end_year": 2025,
+          "workload_hours": null,
+          "status": null,
+          "validation_code": null,
+          "provenance": {
+            "parent_tag": "DADOS-COMPLEMENTARES",
+            "section_tag": "PARTICIPACAO-EM-EVENTOS-CONGRESSOS",
+            "record_tag": "PARTICIPACAO-EM-ENCONTRO",
+            "sequence_attribute": null
+          }
+        }
+      ]
+    }
+  ]
+}

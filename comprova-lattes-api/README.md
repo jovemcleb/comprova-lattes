@@ -2,7 +2,7 @@
 
 Núcleo científico (P0) e API assíncrona (P2) do projeto de TCC 2.
 
-**Estado atual:** schemas e parser M1 implementados para cinco categorias (AD-012); motor, extrator, experimentos e fluxo de revisão humana ainda são planejados. API/worker possuem estrutura base; integração científica não está implementada. Gates e limites em [quality.md](../docs/quality.md).
+**Estado atual:** M1–M6 implementados com verificação offline: parser de cinco categorias (AD-012), matcher determinístico, extrator Gemini com SDK simulado, experimentos sintéticos e API/worker com persistência e revisão humana AD-013. O gate M6 histórico tem 390 testes. Gates S2 e limites em [quality.md](../docs/quality.md). DTD oficial, calibração, anotação humana independente e avaliação científica continuam pendentes; PostgreSQL/Redis/Gemini/Tesseract reais não foram exercitados nos testes.
 
 ## Estrutura de Módulos
 
@@ -38,4 +38,14 @@ python -m pytest
 python -m ruff check .
 ```
 
-Teste observado: 130 aprovados localmente e Ruff sem erros. Compose valida-se com `docker compose config --quiet`; isso não comprova serviços iniciados. Os comandos de instalação/preparação acima não foram reexecutados nesta atualização documental.
+Os comandos de instalação/preparação acima não foram reexecutados na rodada S2; dependências existentes foram preservadas. O histórico do ambiente registra restrição no launcher da `.venv`; comandos efetivos e resultados estão em [quality.md](../docs/quality.md). Compose valida-se com `docker compose config --quiet`; isso não comprova serviços iniciados e não foi revalidado em S2.
+
+## Experimentos e fluxo web
+
+```powershell
+python -m comprova_lattes.experiments --help
+```
+
+Consulte [experiments/README.md](src/comprova_lattes/experiments/README.md) para geração, calibração somente no piloto, congelamento e replay. São 25 casos por família, cinco categorias e cinco operadores; rótulos sintéticos e parâmetros de teste não são resultados científicos.
+
+A API recebe XML e comprovantes em JSON/base64, exige MatcherConfig explícito e persiste o resultado automático separado dos pareceres humanos. TestClient/SQLite e dispatcher/extrator injetáveis verificam esse fluxo offline. O frontend e os contratos de uso estão no [README da interface](../comprova-lattes-app/README.md).

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 import warnings
 import xml.etree.ElementTree as ET
@@ -204,6 +206,8 @@ def parse_lattes_xml_with_report(
         )
     )
 
+    _assign_record_ids(records, lattes_id=header["lattes_id"])
+
     try:
         curriculum = LattesCurriculum(
             lattes_id=header["lattes_id"],
@@ -364,6 +368,8 @@ def _extract_header(
         resumo_elem = dados_gerais.find("RESUMO-CV")
         if resumo_elem is not None:
             summary = _clean_str(resumo_elem.attrib.get("TEXTO-RESUMO-CV-RH"))
+        if summary is None:
+            summary = _clean_str(dados_gerais.attrib.get("TEXTO-RESUMO-CV-RH"))
 
     return {
         "lattes_id": lattes_id,
@@ -409,6 +415,9 @@ def _extract_academic_records(
                 "NOME-CURSO-INGLES",
                 "TITULO-DA-DISSERTACAO-TESE",
                 "TITULO-DO-TRABALHO-DE-CONCLUSAO-DE-CURSO",
+                "TITULO-DA-MONOGRAFIA",
+                "TITULO-DO-TRABALHO",
+                "TITULO-DA-RESIDENCIA-MEDICA",
             ),
         )
         if title_attr == "NOME-CURSO-INGLES":
@@ -435,7 +444,7 @@ def _extract_academic_records(
             diagnostics=diagnostics,
         )
         status = _parse_explicit_status(
-            _clean_str(child.attrib.get("STATUS-DO-CURSO")),
+            _first_clean_attr([child], ("STATUS-DO-CURSO", "STATUS-DO-ESTAGIO")),
             context=context,
             unverified_variants=unverified_variants,
         )
@@ -478,17 +487,18 @@ def _extract_complementary_records(
 ) -> list[LattesRecord]:
     containers: list[tuple[str, ET.Element]] = []
     if dados_comp is not None:
-        comp_section = dados_comp.find("FORMACAO-COMPLEMENTAR")
-        if comp_section is not None:
-            containers.append(("DADOS-COMPLEMENTARES", comp_section))
+        containers.extend(
+            ("DADOS-COMPLEMENTARES", section)
+            for section in dados_comp.findall("FORMACAO-COMPLEMENTAR")
+        )
     if dados_gerais is not None:
-        gerais_section = dados_gerais.find("FORMACAO-COMPLEMENTAR")
-        if gerais_section is not None:
+        gerais_sections = dados_gerais.findall("FORMACAO-COMPLEMENTAR")
+        if gerais_sections:
             unverified_variants.append(
                 "DADOS-GERAIS/FORMACAO-COMPLEMENTAR "
                 "(contêiner legado TS ausente do XSD e da DTD; conformidade UI não verificada)"
             )
-            containers.append(("DADOS-GERAIS", gerais_section))
+            containers.extend(("DADOS-GERAIS", section) for section in gerais_sections)
 
     records: list[LattesRecord] = []
     for parent_tag, section_elem in containers:
@@ -506,7 +516,7 @@ def _extract_complementary_records(
             sequence = _clean_str(child.attrib.get("SEQUENCIA-FORMACAO"))
             title, title_attr = _first_clean_attr_with_name(
                 [child],
-                ("NOME-CURSO", "NOME-CURSO-INGLES"),
+                ("NOME-CURSO", "NOME-CURSO-INGLES", "TITULO-DA-MONOGRAFIA"),
             )
             if title_attr == "NOME-CURSO-INGLES":
                 unverified_variants.append(
@@ -522,7 +532,7 @@ def _extract_complementary_records(
             )
             end_year = _extract_strict_int_from_candidates(
                 [child],
-                ("ANO-DE-CONCLUSAO",),
+                ("ANO-DE-CONCLUSAO", "ANO-DE-OBTENCAO-DO-TITULO"),
                 field_name="end_year",
                 context=context,
             )
@@ -826,6 +836,25 @@ def _select_basic_and_detail_nodes(
         basic_nodes[0] if basic_nodes else None,
         detail_nodes[0] if detail_nodes else None,
     )
+
+
+def _assign_record_ids(records: list[LattesRecord], *, lattes_id: object) -> None:
+    """Identifica conteúdo canônico e distingue duplicatas pela ordem de extração.
+
+    Ordem de atributos e codificação XML não afetam a identidade. Alterações
+    nos dados extraídos geram outra identidade, sem representar edição estável.
+    """
+    occurrences: Counter[str] = Counter()
+    for record in records:
+        payload = json.dumps(
+            [lattes_id, record.model_dump(mode="json", exclude={"record_id"})],
+            sort_keys=True,
+            ensure_ascii=True,
+            separators=(",", ":"),
+        )
+        digest = hashlib.sha256(payload.encode("ascii")).hexdigest()
+        occurrences[digest] += 1
+        record.record_id = f"{digest}:{occurrences[digest]}"
 
 
 def _build_record(**kwargs: object) -> LattesRecord:

@@ -1,7 +1,9 @@
 # Roadmap — Comprova Lattes (TCC 2)
 
-**Current Milestone:** M1 — Parser XML Lattes Seguro
-**Status:** Em andamento — implementação das 5 categorias e gate local verificados (AD-012); referência estrutural XSD/DTD definida (`AD-011`), com requisito DTD do orientador ainda pendente. M2 e protocolo experimental em planejamento/proposta.
+**Current Milestone:** M6 — backend verificado offline; interface implementada com lint/build aprovados
+
+**S2 (2026-11-13):** S2: bloqueio ORGANIZACAO_EVENTO corrigido com autorização em 2026-11-13. Quando event_name=None, evento recebe NOT_APPLICABLE/STRUCTURAL_NOT_APPLICABLE e titulo é essencial, mesmo ausente; com evento preenchido o comportamento anterior permanece. Regressão parametrizada cobre evento documental ausente/presente e título documental ausente. Todos os testes existentes de matcher e experiments preservados; pilot/final aprovados. Gate completo: 396 passed em 24,09 s; Ruff, npm run lint e npm run build com exit 0. Sem instalação, commit/push ou serviços externos; integração real, DTD e estudo oficial continuam pendentes.
+**Status:** API, persistência, worker e revisão AD-013 implementados; gate backend histórico de 390 testes e Ruff offline. Frontend implementado com lint/build exit 0 e smoke checks Node/React SSR; integração real pendente. M4/M5 sem estudo oficial; M1 aberto pelo requisito DTD, M2 sem calibração científica e M3 sem avaliação no serviço real. Gate e limites atuais em STATE/HANDOFF.
 
 ---
 
@@ -20,52 +22,53 @@
 
 - **Leitura Segura (`defusedxml`) & Referência Estrutural (`AD-011`)** — `IMPLEMENTED / IN PROGRESS`: UTF-8/ISO-8859-1, bloqueio de entidades/DTD e limites de recursos. XSD oficial do Extrator CNPq adotado como referência estrutural principal e DTD comunitária como comparação histórica (com fixtures conformes separadas das de robustez), sem presumir equivalência integral com a exportação da interface web (UI). Substituição/atendimento do requisito de validação DTD do professor (#25) ainda pendente de justificativa e confirmação com o orientador; bloqueio de DTD não é validação de conformidade.
 - **Mapeamento de 5 Categorias (`AD-010`, `AD-012`)** — `IMPLEMENTED / VERIFIED LOCAL`: `FORMACAO_ACADEMICA`, `FORMACAO_COMPLEMENTAR` e `PARTICIPACAO_EVENTO` implementadas, com ampliação também implementada para `APRESENTACAO_TRABALHO` (`APRESENTACAO-DE-TRABALHO`) e `ORGANIZACAO_EVENTO` (`ORGANIZACAO-DE-EVENTO`) em `PRODUCAO-TECNICA/DEMAIS-TIPOS-DE-PRODUCAO-TECNICA`, mantendo título, nome do evento, natureza e papel separados sem inferências indevidas (artigos e anais permanecem fora de escopo).
-- **Testes (`pytest`)** — `VERIFIED`: 130 testes e Ruff aprovados independentemente em Python 3.14 local; Linux/Python 3.12 com 130 testes e Ruff relatados pelo Hydrogen. Seis fixtures conformes/técnicas revalidadas independentemente contra XSD offline. Evidências em `docs/m1-linux-verification.md`.
+- **Testes (`pytest`)** — `VERIFIED OFFLINE`: regressões M1 existentes incluídas no gate S1 de 344 testes, incluindo IDs determinísticos únicos, contêineres repetidos e fallbacks de títulos, resumo, status e ano. Parser preservado nesta tarefa. Histórico de 130 testes e seis fixtures XSD em `docs/m1-linux-verification.md`; XSD não foi revalidado nesta execução.
 
 ---
 
-## M2 (P0-C) — Motor Determinístico & Tabela de Decisão (PLANNED)
+## M2 (P0-C) — Motor Determinístico & Tabela de Decisão (IMPLEMENTED / VERIFIED OFFLINE)
 
 **Goal:** Associar e classificar registros das 5 categorias curriculares nas 3 classes (`Validado`, `Divergente`, `Inconclusivo`) de forma 100% determinística e auditável, independente da API do Gemini.
 
-- **Associação, Órfãos e Ambiguidade (`AD-004` a `AD-007`)** — `PLANNED`: Um documento por atividade no MVP (`AD-004`); registro sem comprovante como `Inconclusivo / SEM_COMPROVANTE` (`AD-005`); documento sem registro reportado fora da matriz $3 \times 3$ como `DOCUMENTO_NAO_ASSOCIADO` (`AD-006`); associação ambígua como `Inconclusivo / ASSOCIACAO_AMBIGUA` com revisão humana separada e métricas automáticas calculadas antes da intervenção humana (`AD-007`). AD-013 amplia revisão a todos os inconclusivos e permite revisão das demais classes por solicitação, com parecer/revisor/data/justificativa separados do automático; fluxo ainda não implementado. Limiares quantitativos e resolução de disputas entre registros permanecem em aberto.
-- **Normalização, Similaridade e Regras por Campo (`AD-009`, `AD-010`)** — `PLANNED`: Caixa, acentuação, pontuação, Levenshtein normalizado, tabela explícita de siglas (ex.: `UFRA` ↔ `Universidade Federal Rural da Amazônia`), comparação exata de carga horária em `Decimal` (`40 == 40.0`; `40` vs `45` conflito no campo em par associado, `AD-009`) e separação entre título específico, nome do evento e papel explícito (`AD-010`). Essencialidade e agregação final por categoria, título omitido e coexistência de papéis (ex.: ouvinte vs. apresentador/organizador) permanecem pendentes de aprovação.
-- **Baselines Comparativos & Trilha de Auditoria** — `PLANNED`: Baseline A (Exato), Baseline B (Normalizado) e Método Proposto, com retorno detalhado por campo (escore, regra acionada, magnitude numérica e motivo).
+- **Associação, Órfãos e Ambiguidade (`AD-004` a `AD-007`)** — `IMPLEMENTED`: atribuição global um-para-um de soma máxima, candidatos dentro da margem configurada, ausência de comprovante e órfãos separados da matriz. Âncoras título/evento exigem conteúdo após normalização. Falhas M3 não disputam pares; registros sem par sinalizam falha/ilegibilidade do lote com IDs/status nos diagnósticos, sem presumir associação. Contratos, backend e interface de revisão separados do automático; integração real pendente.
+- **Normalização, Similaridade e Regras por Campo (`AD-009`, `AD-010`)** — `IMPLEMENTED`: normalização, siglas explícitas, Levenshtein, Jaro-Winkler e tokens, essencialidade/agregação por categoria, papéis coexistentes e horas estruturais. Decimal compara valores diretamente e calcula magnitude exata em contexto local, independente da precisão/faixa de expoentes do chamador. Ano inicial divergente é comparado quando ambos informados, mesmo com ano final igual; intervalo de atividade em andamento preservado. Implementação não constitui calibração ou aprovação científica de regras ainda pendentes.
+- **Baselines Comparativos & Trilha de Auditoria** — `IMPLEMENTED`: Exato, Normalizado e Proposto, com escore, regra, magnitude e motivo por campo; serialização JSON verificada. Limiares dos testes são sintéticos; calibração piloto e avaliação final permanecem pendentes.
 
 ---
 
-## M3 (P0-B) — Extração Multimodal com Gemini (PLANNED)
+## M3 (P0-B) — Extração Multimodal com Gemini (IMPLEMENTED / VERIFIED OFFLINE)
 
 **Goal:** Extrair entidades de PDFs e imagens usando `google-genai` com saída validada por JSON Schema e Pydantic.
 
-- **Pipeline Multimodal (`AD-004`, `AD-010`)** — `PLANNED`: Envio de PDF/imagem (1 documento por atividade no MVP), diferenciação entre campo ausente (`null`) e extraído, mantendo nome do evento, título do trabalho/palestra e papel explícito de participação em campos separados.
-- **Rastreabilidade Experimental** — `PLANNED`: Log de modelo, versão, temperatura, prompt (zero-shot/few-shot), latência e consumo de tokens.
-- **Tratamento de Erros (`AD-002`)** — `PLANNED`: Separação entre erro de API, JSON inválido e documento ilegível (`confianca_extracao` e `categoria_sugerida` não entram na decisão).
+- **Pipeline Multimodal (`AD-004`, `AD-010`)** — `IMPLEMENTED / VERIFIED OFFLINE`: PDF, PNG, JPEG e WebP via `google-genai`, JSON Schema e validação Pydantic local; entidades separadas, ausência como `None`, horas em Decimal. Múltiplas atividades rejeitadas pelo contrato. SDK simulado nos testes, sem chamadas ao serviço real.
+- **Rastreabilidade** — `IMPLEMENTED`: modelo solicitado/versão retornada, prompt/versão/schema, temperatura zero, data, hash do documento, latência e tokens quando disponíveis. Modelo experimental e protocolo de repetições ainda pendentes.
+- **Tratamento de Erros (`AD-002`)** — `IMPLEMENTED / VERIFIED OFFLINE`: `API_ERROR`, `INVALID_JSON` e `UNREADABLE`; integração M3 → M2 para sucesso, precisão Decimal, conflito de ano inicial, falhas isoladas e lotes mistos. Confiança/categoria sugeridas não participam da decisão. Nenhuma métrica de extração real produzida.
 
 ---
 
-## M4 (P0-Exp) — Bancada Sintética & Experimentos 1, 2 e 3 (PLANNED)
+## M4 (P0-Exp) — Bancada Sintética & Experimentos 1, 2 e 3 (IMPLEMENTED OFFLINE / STUDY PENDING)
 
 **Goal:** Gerar dados sintéticos controlados e calcular todas as métricas automaticamente via CLI, sem meta arbitrária de Macro-F1 (`AD-008`).
 
-- **Gerador Sintético (Templates HTML/DOCX)** — `PLANNED`: Proposta inicial de 30 cenários piloto (12 Validados, 10 Divergentes, 8 Inconclusivos) + ~90 cenários finais; tamanho definitivo, definição de famílias e distribuição entre as 5 categorias (`AD-012`) e as 3 classes permanecem pendentes de aprovação.
-- **Runner dos 3 Experimentos** — `PLANNED`: Exp 1 (Extração LLM, proposta de 3 repetições), Exp 2 (Motor com gabarito perfeito vs Baselines A/B), Exp 3 (Fluxo integrado, métricas automáticas antes da revisão humana conforme `AD-007`).
-- **Relatórios Automáticos (`AD-006`, `AD-008`)** — `PLANNED`: Matriz de confusão $3 \times 3$ dos registros curriculares, Acurácia, Precisão, Recall, F1 por classe e Macro-F1 observado com intervalo de confiança em CSV/JSON, além de métricas de associação e reporte separado de `DOCUMENTO_NAO_ASSOCIADO`.
+- **Gerador Sintético stdlib** — `IMPLEMENTED OFFLINE`: 5 categorias, XML e PDF/PNG raster válidos, degradação determinística e partição estrita por família/emissor/template. Tamanhos por número de famílias explícitos (25 casos/família); distribuição científica definitiva ainda pendente. Sem alegação de conformidade XSD/DTD.
+- **Runner dos 3 Experimentos + CLI** — `IMPLEMENTED OFFLINE`: extração injetável/replay, três repetições sem inflar N; motor com gabarito vs A/B e três métricas; integrado reutiliza saídas e mede automático pré-revisão. Um registro por XML; bancada de competição multirregistro ainda não implementada.
+- **Relatórios e congelamento (`AD-006`, `AD-008`)** — `IMPLEMENTED OFFLINE`: JSON com matriz 3×3, métricas por classe, associação e órfãos separados, falhas/estabilidade/propagação; calibração só piloto e SHA-256 de artefatos e corpus. Bootstrap por família; avaliação oficial e cegamento cronológico continuam responsabilidades do protocolo.
 
 ---
 
-## M5 (P1) — Melhorias Científicas Recomendadas (PLANNED)
+## M5 (P1) — Melhorias Científicas Recomendadas (IMPLEMENTED OFFLINE / STUDY PENDING)
 
 **Goal:** Elevar o rigor estatístico e comparativo da monografia.
 
-- **Baseline OCR Clássico** — `PLANNED`: `Tesseract` + RegEx nos mesmos documentos.
-- **Métricas & Estatística** — `PLANNED`: Jaro-Winkler/tokens, Kappa de Cohen nos gabaritos, IC via bootstrap e teste de McNemar (unidade de reamostragem, nível do IC e regra de agregação das repetições continuam propostas sem aprovação).
+- **Baseline OCR Clássico** — `IMPLEMENTED / INJECTABLE`: OCR+RegEx recebe bytes/MIME; Tesseract real não instalado nem executado nesta tarefa.
+- **Métricas & Estatística** — `IMPLEMENTED OFFLINE`: Kappa pré-consenso, IC percentil por família, McNemar pareado exato binomial e Holm; comparação Jaro-Winkler/tokens. Parâmetros explícitos, nenhuma meta de F1. Anotações humanas, calibração definitiva e avaliação real pendentes.
 
 ---
 
-## M6 (P2) — API FastAPI, Filas Celery & Interface Web (PLANNED)
+## M6 (P2) — API FastAPI, Filas Celery & Interface Web (BACKEND VERIFIED OFFLINE / UI IMPLEMENTED / REAL INTEGRATION PENDING)
 
 **Goal:** Integrar os módulos validados à API assíncrona e ao frontend React (`comprova-lattes-app`).
 
-- **Endpoints FastAPI + Worker Celery** — `PLANNED`: Upload de XML/documentos, disparo de jobs no Redis/Celery e persistência no PostgreSQL.
-- **Telas React (`comprova-lattes-app`)** — `PLANNED`: Nova validação, acompanhamento de progresso e visualização rastreável por campo.
+- **Endpoints FastAPI + Worker Celery** — `IMPLEMENTED / VERIFIED OFFLINE`: health/CORS, criação JSON com XML texto/base64 e documentos base64, listagem paginada, consulta, persistência SQLAlchemy e tarefa M1 → M3 → M2. Configuração do matcher obrigatória, sem limiar científico implícito. SQLite em memória e extrator/dispatcher injetáveis; serviços reais não exercitados.
+- **Revisão humana AD-013** — `IMPLEMENTED / VERIFIED OFFLINE`: inconclusivos e revisão solicitada das demais classes, justificativa obrigatória, documentos restritos ao lote, correção/rejeição de associação e histórico com revisor/data/parecer. Snapshot automático preservado e contagens automáticas/pós-revisão separadas. Identidade do revisor declarada, sem autenticação; recuperação de jobs interrompidos e migrações pendentes.
+- **Telas React (`comprova-lattes-app`)** — `IMPLEMENTED / LINT + BUILD VERIFIED`: histórico/health, criação com XML binário ou texto, múltiplos comprovantes e MatcherConfig explícito; acompanhamento com polling, auditoria M1 → M3 → M2, candidatos/órfãos/diagnósticos e revisão humana AD-013 com histórico e sumários separados. Camadas types/lib/hooks/components/pages; smoke checks de serviços e renderização SSR aprovados. Integração interativa com serviços reais ainda pendente, sem afirmar avaliação científica ou operação de infraestrutura.

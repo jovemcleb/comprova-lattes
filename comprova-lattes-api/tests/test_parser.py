@@ -313,7 +313,8 @@ def test_parse_missing_fields_remain_none_without_invented_sentinels() -> None:
 
     grad, comp, evento = curriculum.records
 
-    assert grad.record_id is None
+    assert grad.record_id is not None
+    assert grad.record_id == parse_lattes_xml(xml_bytes).records[0].record_id
     assert grad.sequence is None
     assert grad.provenance.sequence_attribute is None
     assert grad.holder_name is None

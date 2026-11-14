@@ -1,7 +1,58 @@
 # Project State & Open Decisions
 
 **Last Updated:** 2026-11-13
-**Current Work:** M1 ampliado para cinco categorias (AD-012): 130 testes e Ruff aprovados em verificação local independente; seis fixtures conformes/técnicas revalidadas offline contra XSD. Hydrogen relatou também 130 testes e Ruff em Linux/Python 3.12. Requisito DTD e equivalência UI permanecem pendentes. M2/protocolo em proposta; revisão humana ampliada aprovada em AD-013, ainda não implementada.
+**Current Work:** S2: bloqueio ORGANIZACAO_EVENTO corrigido com autorização em 2026-11-13. Quando event_name=None, evento recebe NOT_APPLICABLE/STRUCTURAL_NOT_APPLICABLE e titulo é essencial, mesmo ausente; com evento preenchido o comportamento anterior permanece. Regressão parametrizada cobre evento documental ausente/presente e título documental ausente. Todos os testes existentes de matcher e experiments preservados; pilot/final aprovados. Gate completo: 396 passed em 24,09 s; Ruff, npm run lint e npm run build com exit 0. Sem instalação, commit/push ou serviços externos; integração real, DTD e estudo oficial continuam pendentes.
+
+## S2 — correções e bloqueio de escopo (2026-11-13)
+
+- Gerador usa subnós DADOS-BASICOS/DETALHAMENTO em eventos/produção técnica; organização preserva event_name=None; apresentação inclui APRESENTADOR no gabarito documental. Famílias mantêm 25 casos isolados por emissor/template/partição.
+- `legitimate`: sigla por emissor materializada por `synthetic_acronyms`, radicais exportados em `SYNTHETIC_ACRONYMS`, espaços e uma edição ASCII no título longo. `factual_mutation` substitui year_mutation: 40→45/400, ano +7, titular e instituição por categoria. Corpus/manifestos antigos precisam ser regenerados.
+- Frontend: exemplo operacional explícito sem alegar calibração, restauração do template com limiares nulos, upload incremental com deduplicação nome+tamanho, limpeza e revisão ressincronizada ao reabrir, preservando associação humana nula.
+- Reconciliação de README raiz/API/app, quality, ARCHITECTURE e PROFESSOR-REQUIREMENTS: implementação offline separada de estudos/anotação/decisões pendentes; links ../../../../Caleb removidos.
+- Bloqueio resolvido nesta continuação autorizada; detalhes e gate atual no início deste documento. O bloqueio relatado na rodada S2 anterior fica superado por esta correção.
+- Comandos, resultados e limites em [quality.md](../../docs/quality.md). Sem instalação, commit/push, dados reais ou serviços externos; alterações preexistentes preservadas.
+
+## M6 — interface React e auditoria AD-013 (2026-11-13)
+
+- Rotas `/`, `/validacoes/nova` e `/validacoes/:validationId`, com camadas types/lib/hooks/components/pages. Fetch para os cinco endpoints reais, URL via `VITE_API_BASE_URL` (padrão localhost:8000), TanStack Query para cache/invalidação/polling e React Router para navegação.
+- Upload XML binário em `xml_base64` preserva encoding original; texto usa UTF-8 em `xml_content` e rejeita declaração incompatível. Múltiplos comprovantes PDF/PNG/JPEG/WebP em base64; configuração completa do matcher editável e obrigatória, com thresholds inicialmente nulos, sem limiares científicos implícitos.
+- Auditoria M1 → M3 → M2: fonte curricular/proveniência por registro, diagnósticos/encoding/variantes, extrações completas e documentos originais, evidências por campo, candidatos e pares. Órfãos DOCUMENTO_NAO_ASSOCIADO separados; contagens automáticas e após revisão distintas, sem interpretação como métricas científicas.
+- AD-013: encaminhamento com review_required, revisão solicitada nas outras classes, associação/correção com qualquer documento do lote, rejeições sem contradição, reviewer/justification obrigatórios e histórico de pareceres. Snapshot automático permanece preservado; estado humano vem da resposta do servidor.
+- Gate frontend: `npm run lint` e `npm run build`, ambos exit code 0. Smoke checks Node em memória: conversão binária/base64, MatcherConfig, MIME, POST criação/revisão e ID após 503; React SSR das três rotas e detalhe COMPLETED/INCONCLUSIVO com formulário AD-013 renderizados. SSR não é teste interativo de navegador.
+- Limites: integração PostgreSQL/Redis/Gemini e percurso interativo em navegador não exercitados. PDF depende do visualizador do navegador (download disponível). Histórico carrega páginas ascendentes da API, ordena globalmente e pagina localmente; custo cresce com o histórico. Backend gate de 390 testes é histórico, não reexecutado nesta tarefa para preservar restrição de escrita em api/.
+- Escrita limitada a app/src, app/README e STATE/ROADMAP/HANDOFF; dependências e alterações preexistentes preservadas. Sem instalação, commit, push, corpus real ou mudanças metodológicas.
+
+## M6 — backend e revisão auditável (2026-11-13)
+
+- `api/main.py`: health preservado, CORS localhost/127.0.0.1:5173 configurável via fábrica, criação JSON (XML texto ou base64 e PDF/imagens base64), listagem paginada, consulta e revisão por índice de registro. Sem multipart ou pacotes novos.
+- SQLAlchemy em `api/db.py`: entrada/documentos, configuração explícita do matcher, relatório M1, extrações M3 e snapshot completo M2 persistidos em JSON; revisões em tabela separada, histórico incremental com revisor, data UTC do servidor, parecer, justificativa, associação e rejeições. Fontes, candidatos e evidências disponíveis na consulta.
+- AD-013: inconclusivos encaminhados; POST de revisão constitui solicitação para qualquer classe. Documentos associados/rejeitados precisam pertencer ao lote; correção pode selecionar documento fora dos candidatos automáticos. Contradições e duplicatas rejeitadas. Nunca sobrescreve resultado/evidências automáticos; `automatic_summary` conta classes originais e `reviewed_summary` usa último parecer por registro, com automático como fallback. São contagens operacionais, não métricas científicas.
+- `worker.py`: tarefa `comprova_lattes.process_validation`, pipeline M1 → M3 → M2 com extrator injetável. Claim atômico PENDING → PROCESSING evita reprocessamento e sobrescrita em entregas duplicadas. Estados COMPLETED/FAILED e DISPATCH_FAILED, erro sanitizado; health/importação não conectam serviços. Dispatcher injetável nos testes.
+- Gate: suíte completa **390 passed em 24,23 s**, incluindo **30 testes API**; `.venv/Scripts/ruff.exe check .` → **All checks passed!**, offline, SQLite em memória, TestClient, extrator fake e Celery local (`apply`). Comandos em HANDOFF.
+- Limites: sem autenticação; `reviewer` é identidade declarada, não verificada. Histórico auditável no aplicativo, sem proteção contra administrador do banco. Sem migração de banco existente ou recuperação automática de jobs interrompidos em PROCESSING/dispatch falho. PostgreSQL/Redis/Gemini reais não exercitados. Frontend fora do escopo da entrega backend histórica; implementado na entrega frontend descrita acima. `ARCHITECTURE.md` permanece histórico/alvo por restrição de escrita; estado de implementação atual neste documento.
+- Alterações preexistentes preservadas; escrita desta entrega somente api/, worker.py, tests/test_api.py e STATE/ROADMAP/HANDOFF. Sem commit/push ou corpus real.
+
+## M4/M5 — implementação offline (2026-11-13)
+
+- Gerador determinístico stdlib: 5 categorias × 5 operadores por família, XML consumível pelo parser e PDF raster/PNG com degradação. Família/emissor/template não atravessam piloto/final. Rótulos são intenções sintéticas, não consenso humano.
+- Exp 1: OCR+RegEx injetável, 3 saídas preservadas, métricas por campo, falhas e estabilidade sem triplicar N. Exp 2: A/B e Levenshtein/Jaro-Winkler/tokens. Exp 3: reutiliza extrações, matriz 3×3 automática pré-revisão, associação separada, órfãos fora da matriz e propagação de erros.
+- Kappa pré-consenso, bootstrap percentil de famílias, McNemar binomial exato por acerto integral da família e Holm. Semente/réplicas/confiança explícitos; sem meta arbitrária. Repetições distintas são relatadas separadamente, sem adotar consenso silencioso.
+- Calibração rejeita final; seleção por Macro-F1 piloto com desempate pelo primeiro candidato. Manifesto verifica hashes de artefatos, configuração, XML, documentos e gabaritos antes dos runners CLI.
+- Limites: bancada atual usa um registro por XML, sem competição entre vários registros. Renderização direta stdlib substitui HTML/DOCX nesta implementação autorizada. Sem alegação de conformidade XSD/DTD, execução Tesseract/Gemini real ou rotulagem independente concluída. Corpus materializa ambas as partições; freeze verifica integridade, não prova cegamento cronológico.
+- Uso e formatos: `comprova-lattes-api/src/comprova_lattes/experiments/README.md`. Configurações demonstrativas não aprovam desenho definitivo, modelo, tamanhos ou limiares. Sem documentos reais, novos pacotes, commit/push ou alterações a parser/matcher/extractor.
+- Gate final executado: suíte completa **360 passed em 20,10 s**; `.venv/Scripts/ruff.exe check .` → **All checks passed!**. Python 3.14 global com dependências já instaladas da `.venv`; cache desativado e temporários direcionados para `tests/` devido a restrições locais. Comando reproduzível e limitações no HANDOFF.
+
+## S1 / AV-05 — evidência local (2026-11-13)
+
+- Decimal: igualdade direta e diferença exata com precisão e faixa de expoentes locais, independentes do contexto externo; regressões de baixa precisão, arredondamento, underflow, overflow e serialização.
+- Falhas M3: excluídas da atribuição; registros sem par recebem inconclusão por falha/ilegibilidade quando há extrações malsucedidas no lote, com diagnósticos identificando documento/status. Isso sinaliza incerteza do lote e não prova vínculo entre falha e registro. Documentos permanecem no relatório de não associados; pares válidos não são contaminados.
+- Âncoras: título/evento somente pontuação não sustenta associação após normalização. Ano inicial comparado quando presente em ambas as fontes, preservando regra de ano final/intervalo.
+- M1: cinco categorias e regressões existentes verificadas, incluindo IDs determinísticos, contêineres repetidos e fallbacks de títulos, resumo, status e ano. Parser preservado nesta tarefa; requisito DTD e equivalência UI continuam pendentes.
+- M2: associação global um-para-um, três modos (exato, normalizado e proposto), métricas textuais, regras por categoria, evidências e contratos de revisão implementados. Limiares dos testes são sintéticos, não calibração científica; fluxo de revisão na API/interface ainda planejado.
+- M3: SDK multimodal, validação local JSON/Pydantic e metadados implementados; integração M3 → M2 testada com transporte simulado para sucesso, precisão Decimal, conflito de ano inicial, falhas isoladas e lotes mistos. Confiança/categoria sugeridas não participam da decisão.
+- Gate final: `python -m pytest -q -p no:cacheprovider` → **344 passed**; `python -m ruff check .` → **All checks passed!**. Python 3.14 global com dependências existentes da `.venv` em `PYTHONPATH`; launcher uv da `.venv` bloqueado por acesso negado. Reprodução em HANDOFF. Cache pytest desativado após aviso de escrita; nenhum teste desativado.
+- Nenhum corpus real, calibração piloto, Macro-F1, chamada paga ou revalidação XSD nesta tarefa. O histórico de 130 testes/XSD permanece em `docs/m1-linux-verification.md`; não confundir com o gate atual.
+- Escrita restrita a matcher, testes e STATE/ROADMAP/HANDOFF; diffs preexistentes de parser/extrator preservados. Sem commit/push. Descrições planejadas em `codebase/ARCHITECTURE.md` e contratos históricos não foram alteradas por estarem fora do escopo autorizado.
 
 ---
 
@@ -66,7 +117,7 @@
 - **Rastreabilidade:** Preservar resultado e evidências automáticos originais. Registrar associação e parecer humanos separadamente, sem sobrescrever a decisão automática.
 - **Experimentos:** Calcular métricas automáticas antes da intervenção humana. Se resultados após revisão forem avaliados, apresentá-los separadamente; esta aprovação não define um experimento humano adicional nem altera o gabarito.
 - **Fundamento e alcance:** O comentário #38 do professor menciona revisão manual de possíveis associações. A extensão para todos os inconclusivos e para revisão solicitada de outras classes é decisão do usuário, não exigência explícita do professor.
-- **Entrega:** Contratos M2/protocolo reconciliados após a entrega parcial do Argon; implementar o fluxo de revisão na etapa de API/interface. Decisão registrada, funcionalidade ainda não implementada. Não altera a prioridade do M1 nem resolve a tabela de essencialidade por categoria ou as escolhas estatísticas pendentes.
+- **Entrega:** Contratos M2/protocolo reconciliados após a entrega parcial do Argon; backend de revisão verificado offline e interface implementada no M6; integração real pendente. Não resolve o requisito DTD do M1, a tabela de essencialidade por categoria ou escolhas científicas pendentes.
 
 ## Pendências Administrativas (CTES / Orientador)
 

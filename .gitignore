@@ -28,3 +28,8 @@ Thumbs.db
 references/legacy-drive/
 references/xml-grammars/cnpq-official/
 references/xml-grammars/community-dtd/
+
+# Artefatos locais de navegador e respostas individuais (não publicar)
+.playwright-mcp/
+anotacao-*-draft*.json
+anotacao-*-final*.json

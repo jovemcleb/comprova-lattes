@@ -15,7 +15,8 @@ export function DocumentViewer({ document, caseId }: { document: PackageDocument
       if (!node) return
       const url = URL.createObjectURL(blob)
       if (node instanceof HTMLAnchorElement) node.href = url
-      else if (node instanceof HTMLImageElement || node instanceof HTMLIFrameElement) node.src = url
+      else if (node instanceof HTMLIFrameElement) node.src = `${url}#view=FitH`
+      else if (node instanceof HTMLImageElement) node.src = url
       return () => URL.revokeObjectURL(url)
     },
     [blob],
@@ -29,10 +30,13 @@ export function DocumentViewer({ document, caseId }: { document: PackageDocument
       ) : (
         <img ref={bindUrl} className="document-image" alt={`Comprovante do ${caseId}`} />
       )}
-      <p className="annot-note">
-        Se a prévia não aparecer, <a ref={bindUrl} download={`${caseId}.${EXTENSIONS[document.mime_type]}`}>baixe o comprovante</a>.
-        Hash SHA-256 verificado na importação: <span className="code">{document.sha256.slice(0, 16)}…</span>
-      </p>
+      <div className="annot-actions">
+        <a ref={bindUrl} target="_blank" rel="noopener noreferrer">Abrir comprovante em tamanho maior</a>
+        <a ref={bindUrl} download={`${caseId}.${EXTENSIONS[document.mime_type]}`}>Baixar comprovante</a>
+      </div>
+      <details className="annot-technical"><summary>Detalhes do arquivo</summary>
+        <p className="annot-note">Hash SHA-256 verificado na importação: <span className="code">{document.sha256}</span></p>
+      </details>
     </section>
   )
 }

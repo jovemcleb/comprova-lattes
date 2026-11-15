@@ -30,8 +30,11 @@ FORBIDDEN_FULL_TEXT_TOKENS = (
     "mutado",
 )
 
-HOLDER_PATTERN = re.compile(r"^PESSOA FICTICIA [0-9A-F]{12}$")
-INSTITUTION_PATTERN = re.compile(r"^INSTITUTO FICTICIO [0-9A-F]{12}$")
+HOLDER_PATTERN = re.compile(r"^[A-Za-zÀ-ÿ]+(?: [A-Za-zÀ-ÿ]+){1,3}$")
+INSTITUTION_PATTERN = re.compile(
+    r"^(?:Instituto|Centro|Faculdade|Escola)(?: [A-Za-zÀ-ÿ]+){1,3}$"
+)
+HEX_SUFFIX_PATTERN = re.compile(r"\b[0-9a-fA-F]{6,}\b")
 
 
 @pytest.fixture(scope="module")
@@ -191,9 +194,9 @@ def test_ad014_and_legitimate_characteristics_are_not_exclusive_cues(full_corpus
         )
         assert differs_literally
         has_double_space = "  " in leg.gold.activity_title
-        has_case_diff = leg.gold.activity_title != leg.gold.activity_title.upper()
+        has_upper_case = leg.gold.activity_title == leg.gold.activity_title.upper()
         has_punct_diff = any(ch in leg.gold.activity_title for ch in (",", "-", ":"))
-        variation_profiles.add((has_double_space, has_case_diff, has_punct_diff))
+        variation_profiles.add((has_double_space, has_upper_case, has_punct_diff))
 
     assert len(variation_profiles) >= 3
 
@@ -206,9 +209,18 @@ def test_mutated_identities_share_neutral_shape_and_determinism(full_corpus):
     pilot_only = generate(seed=42, pilot_families=10, final_families=3).select("pilot")
     assert full_corpus.select("pilot") == pilot_only
     other_seed_corpus = generate(seed=99, pilot_families=10, final_families=20)
+    assert full_corpus != other_seed_corpus
 
-    seen_holder_suffixes = set()
-    seen_institution_suffixes = set()
+    normal_holders = {
+        normalize_text(c.curriculum.full_name) for c in full_corpus.cases if c.operator == "identity"
+    }
+    normal_institutions = {
+        normalize_text(c.curriculum.records[0].institution)
+        for c in full_corpus.cases
+        if c.operator == "identity"
+    }
+    seen_mutated_holders = set()
+    seen_mutated_institutions = set()
 
     for family_id, ops in by_family.items():
         id_case = ops["identity"]
@@ -228,32 +240,36 @@ def test_mutated_identities_share_neutral_shape_and_determinism(full_corpus):
             mutated_name = mut_case.gold.holder_name
             assert HOLDER_PATTERN.match(normal_name)
             assert HOLDER_PATTERN.match(mutated_name)
-            assert len(mutated_name) == len(normal_name)
-            assert mutated_name.split()[:-1] == normal_name.split()[:-1]
-            suffix = mutated_name.rsplit(" ", 1)[1]
-            assert suffix != family_id.upper()
-            assert suffix == alternative_identity(full_corpus.seed, family_id, "holder_name")
-            assert suffix != alternative_identity(full_corpus.seed, family_id, "issuer_institution")
-            assert suffix != alternative_identity(other_seed_corpus.seed, family_id, "holder_name")
-            seen_holder_suffixes.add(suffix)
+            assert not HEX_SUFFIX_PATTERN.search(normal_name)
+            assert not HEX_SUFFIX_PATTERN.search(mutated_name)
+            assert mutated_name != normal_name
+            assert normalize_text(mutated_name) not in normal_holders
+            assert len(mutated_name.split()) == len(normal_name.split())
+            seen_mutated_holders.add(mutated_name)
 
         elif category == LattesCategory.ORGANIZACAO_EVENTO:
             normal_inst = id_case.gold.issuer_institution
             mutated_inst = mut_case.gold.issuer_institution
             assert INSTITUTION_PATTERN.match(normal_inst)
             assert INSTITUTION_PATTERN.match(mutated_inst)
-            assert len(mutated_inst) == len(normal_inst)
-            assert mutated_inst.split()[:-1] == normal_inst.split()[:-1]
-            suffix = mutated_inst.rsplit(" ", 1)[1]
-            assert suffix != family_id.upper()
-            assert suffix == alternative_identity(
-                full_corpus.seed, family_id, "issuer_institution"
-            )
-            assert suffix != alternative_identity(full_corpus.seed, family_id, "holder_name")
-            assert suffix != alternative_identity(
-                other_seed_corpus.seed, family_id, "issuer_institution"
-            )
-            seen_institution_suffixes.add(suffix)
+            assert not HEX_SUFFIX_PATTERN.search(normal_inst)
+            assert not HEX_SUFFIX_PATTERN.search(mutated_inst)
+            assert mutated_inst != normal_inst
+            assert normalize_text(mutated_inst) not in normal_institutions
+            assert len(mutated_inst.split()) == len(normal_inst.split())
+            seen_mutated_institutions.add(mutated_inst)
 
-    assert len(seen_holder_suffixes) == 6
-    assert len(seen_institution_suffixes) == 6
+    assert len(seen_mutated_holders) == 6
+    assert len(seen_mutated_institutions) == 6
+    assert alternative_identity(42, "abc123def456", "holder_name") == alternative_identity(
+        42, "abc123def456", "holder_name"
+    )
+    assert alternative_identity(42, "abc123def456", "holder_name") != alternative_identity(
+        99, "abc123def456", "holder_name"
+    )
+    assert alternative_identity(42, "abc123def456", "issuer_institution") == alternative_identity(
+        42, "abc123def456", "issuer_institution"
+    )
+    assert alternative_identity(42, "abc123def456", "issuer_institution") != alternative_identity(
+        99, "abc123def456", "issuer_institution"
+    )

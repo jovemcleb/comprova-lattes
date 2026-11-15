@@ -479,3 +479,105 @@ def test_real_tesseract_smoke_png_jpeg_and_pdf_fixed_and_pilot_only(tmp_path, ca
     assert ocr_cli_main(["--file", str(sample_png_path), "--dpi", "150"]) == 0
     cli_out = capsys.readouterr().out
     assert "CURSO SINTETICO TESTE" in cli_out
+
+
+def test_tesseract_ocr_baseline_defaults_and_optional_quality_params(tmp_path):
+    baseline = TesseractOCR()
+    assert baseline.dpi == 300
+    assert baseline.pdf_resampling == "pdfium"
+    assert baseline.upscale_small_images is False
+    assert baseline.psm is None
+
+    with pytest.raises(ValueError, match="pdf_resampling"):
+        TesseractOCR(pdf_resampling="bilinear")
+    with pytest.raises(ValueError, match=r"(?i)psm"):
+        TesseractOCR(psm=14)
+    with pytest.raises(ValueError, match=r"(?i)psm"):
+        TesseractOCR(psm=True)
+    with pytest.raises(ValueError, match="upscale_small_images"):
+        TesseractOCR(upscale_small_images="yes")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="small_image_upscale_max_dim"):
+        TesseractOCR(small_image_upscale_max_dim=0)
+
+    captured_cmds: list[list[str]] = []
+    captured_sizes: list[tuple[int, int]] = []
+
+    def fake_runner(cmd, **kwargs):
+        if "--list-langs" in cmd:
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout="List of available languages in \"C:\\tessdata\":\npor\n", stderr=""
+            )
+        if "--version" in cmd:
+            return subprocess.CompletedProcess(cmd, 0, stdout="tesseract 5.4.0.20240606\n", stderr="")
+        captured_cmds.append(list(cmd))
+        with Image.open(cmd[1]) as sent_img:
+            captured_sizes.append(sent_img.size)
+        return subprocess.CompletedProcess(cmd, 0, stdout="Texto ok", stderr="")
+
+    fixed_record = ExtractedDocumentRecord(
+        document_id="unit-pdf",
+        holder_name="Ana Teste",
+        activity_title="Curso Teste",
+        issuer_institution="Instituto Teste",
+        start_year=2024,
+        end_year=2024,
+        activity_year=2024,
+        workload_hours=Decimal(10),
+    )
+    w, h, px = raster(document_text(fixed_record, layout=0), seed=1, degradation=0, layout=0)
+    sample_pdf = pdf(w, h, px)
+    small_png = png(w, h, px)
+
+    # Baseline does not emit --psm and keeps original PNG dimensions
+    ocr_base = TesseractOCR(executable="tesseract", runner=fake_runner)
+    assert ocr_base(small_png, "image/png") == "Texto ok"
+    assert "--psm" not in captured_cmds[-1]
+    assert captured_sizes[-1] == (w, h)
+    meta_base = ocr_base.metadata()
+    assert meta_base["pdf_resampling"] == "pdfium"
+    assert meta_base["upscale_small_images"] is False
+    assert meta_base["psm"] is None
+
+    # Opt-in pillow_lanczos PDF resampling + small image upscale + psm
+    ocr_opt = TesseractOCR(
+        executable="tesseract",
+        dpi=288,
+        pdf_resampling="pillow_lanczos",
+        upscale_small_images=True,
+        small_image_upscale_max_dim=1400,
+        psm=3,
+        runner=fake_runner,
+    )
+    assert ocr_opt(sample_pdf, "application/pdf") == "Texto ok"
+    assert "--psm" in captured_cmds[-1]
+    psm_idx = captured_cmds[-1].index("--psm")
+    assert captured_cmds[-1][psm_idx + 1] == "3"
+    assert captured_sizes[-1] == (w * 4, h * 4)
+
+    assert ocr_opt(small_png, "image/png") == "Texto ok"
+    assert captured_sizes[-1] == (w * 4, h * 4)
+
+    ocr_no_upscale_above_threshold = TesseractOCR(
+        executable="tesseract",
+        dpi=288,
+        upscale_small_images=True,
+        small_image_upscale_max_dim=max(w, h),
+        runner=fake_runner,
+    )
+    assert ocr_no_upscale_above_threshold(small_png, "image/png") == "Texto ok"
+    assert captured_sizes[-1] == (w, h)
+    meta_opt = ocr_opt.metadata()
+    assert meta_opt["pdf_resampling"] == "pillow_lanczos"
+    assert meta_opt["upscale_small_images"] is True
+    assert meta_opt["psm"] == 3
+
+    # max_image_pixels guardrail still enforced after pillow_lanczos rescale
+    ocr_tiny_limit = TesseractOCR(
+        executable="tesseract",
+        dpi=288,
+        pdf_resampling="pillow_lanczos",
+        max_image_pixels=w * h * 2,
+        runner=fake_runner,
+    )
+    with pytest.raises(OCRRenderError, match="excede o limite"):
+        ocr_tiny_limit(sample_pdf, "application/pdf")

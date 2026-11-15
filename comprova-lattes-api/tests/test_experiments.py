@@ -33,6 +33,7 @@ from comprova_lattes.experiments.synthetic import (
     alternative_identity,
     document_text,
     generate,
+    institution_acronym,
     synthetic_acronyms,
 )
 from comprova_lattes.matcher.models import ExtractedDocumentRecord, MatcherConfig, MatcherThresholds
@@ -309,7 +310,12 @@ def test_synthetic_xml_structure_and_raster_alphabet(corpus):
 def test_legitimate_variation_and_factual_mutations(corpus, config):
     from comprova_lattes.matcher.rules import compare_institution
 
-    assert SYNTHETIC_ACRONYMS == {"IF": "INSTITUTO FICTICIO"}
+    assert SYNTHETIC_ACRONYMS == {
+        "I": "Instituto",
+        "C": "Centro",
+        "F": "Faculdade",
+        "E": "Escola",
+    }
     assert config.acronym_table == synthetic_acronyms(corpus.select("pilot"))
     assert not (set(config.acronym_table) & set(synthetic_acronyms(corpus.select("final"))))
     empty_config = config.model_copy(update={"acronym_table": {}})
@@ -328,19 +334,15 @@ def test_legitimate_variation_and_factual_mutations(corpus, config):
                 case.operator == "factual_mutation" and record.category == "ORGANIZACAO_EVENTO"
             )
             if case.gold.issuer_name_acronym_evidence is not None:
-                expected_suffix = (
-                    alternative_identity(corpus.seed, case.family_id, "issuer_institution")
-                    if is_mutated_inst
-                    else case.issuer_id.upper()
-                )
-                expected_acronym = f"IF{expected_suffix}"
+                expected_acronym = institution_acronym(case.gold.issuer_institution)
+                xml_acronym = institution_acronym(record.institution)
                 assert case.gold.issuer_acronym == expected_acronym
                 assert (
                     case.gold.issuer_name_acronym_evidence
                     == f"{case.gold.issuer_institution} - {expected_acronym}"
                 )
                 xml_acronym_rel = compare_institution(
-                    record.model_copy(update={"institution": f"IF{case.issuer_id.upper()}"}),
+                    record.model_copy(update={"institution": xml_acronym}),
                     case.gold,
                     empty_config,
                 )
@@ -350,6 +352,7 @@ def test_legitimate_variation_and_factual_mutations(corpus, config):
                     empty_config,
                 )
                 if is_mutated_inst:
+                    assert expected_acronym != xml_acronym
                     assert xml_acronym_rel.outcome != "MATCH"
                     assert (
                         compare_institution(record, case.gold, empty_config).rule_applied
@@ -357,6 +360,7 @@ def test_legitimate_variation_and_factual_mutations(corpus, config):
                     )
                     assert doc_acronym_rel.rule_applied == "DOCUMENT_ACRONYM_EQUIVALENCE"
                 else:
+                    assert expected_acronym == xml_acronym
                     assert doc_acronym_rel.outcome == "MATCH"
                     assert doc_acronym_rel.rule_applied == "DOCUMENT_ACRONYM_EQUIVALENCE"
                     assert doc_acronym_rel.document_evidence == case.gold.issuer_name_acronym_evidence
@@ -364,7 +368,7 @@ def test_legitimate_variation_and_factual_mutations(corpus, config):
                 assert case.gold.issuer_acronym is None
 
         if case.operator == "legitimate":
-            expected_acronym = f"IF{case.issuer_id.upper()}"
+            expected_acronym = institution_acronym(record.institution)
             assert normalize_text(case.gold.issuer_institution) == normalize_text(
                 record.institution
             )
@@ -413,25 +417,22 @@ def test_legitimate_variation_and_factual_mutations(corpus, config):
                 elif field == "activity_year":
                     assert case.gold.start_year == case.gold.end_year == 2031
             elif record.category == "APRESENTACAO_TRABALHO":
-                expected_holder = (
-                    f"PESSOA FICTICIA {alternative_identity(corpus.seed, case.family_id, 'holder_name')}"
-                )
-                assert case.gold.holder_name == expected_holder
+                assert case.gold.holder_name is not None
                 assert case.gold.holder_name != case.curriculum.full_name
-                assert case.gold.holder_name.startswith("PESSOA FICTICIA ")
-                assert len(case.gold.holder_name) == len(case.curriculum.full_name)
+                assert 2 <= len(case.gold.holder_name.split()) <= 4
+                assert case.gold.holder_name != alternative_identity(
+                    corpus.seed, case.family_id, "issuer_institution"
+                )
                 assert case.gold.model_copy(
                     update={"document_id": baseline_gold.document_id, "holder_name": baseline_gold.holder_name}
                 ) == baseline_gold
             elif record.category == "ORGANIZACAO_EVENTO":
-                expected_inst = (
-                    "INSTITUTO FICTICIO "
-                    f"{alternative_identity(corpus.seed, case.family_id, 'issuer_institution')}"
-                )
-                assert case.gold.issuer_institution == expected_inst
+                assert case.gold.issuer_institution is not None
                 assert case.gold.issuer_institution != record.institution
-                assert case.gold.issuer_institution.startswith("INSTITUTO FICTICIO ")
-                assert len(case.gold.issuer_institution) == len(record.institution)
+                assert 2 <= len(case.gold.issuer_institution.split()) <= 4
+                assert case.gold.issuer_institution != alternative_identity(
+                    corpus.seed, case.family_id, "holder_name"
+                )
                 restore = {
                     "document_id": baseline_gold.document_id,
                     "issuer_institution": baseline_gold.issuer_institution,

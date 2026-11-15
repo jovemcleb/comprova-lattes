@@ -13,15 +13,23 @@ Núcleo científico (P0) e API assíncrona (P2) do projeto de TCC 2.
 - `src/comprova_lattes/api/`: Endpoints FastAPI.
 - `src/comprova_lattes/worker.py`: Configuração do Celery + Redis.
 
-## 1. Subindo via Docker Compose (PostgreSQL + Redis + API + Celery)
+## 1. Subindo via Docker Compose (PostgreSQL + Redis + API + Celery + OCR)
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 docker compose up --build -d
 ```
 
+Se as portas padrão já estiverem ocupadas por outro projeto, defina
+`POSTGRES_PORT=55432` e `REDIS_PORT=56379` no `.env` antes de subir os serviços.
+Essas variáveis alteram apenas as portas publicadas no computador; API e worker
+continuam acessando `postgres:5432` e `redis:6379` dentro da rede Docker.
+O serviço `api` tem healthcheck HTTP: container iniciado não garante aplicação
+disponível. Confira `docker compose ps` e `http://localhost:8000/health`.
+
 - **Healthcheck API:** `http://localhost:8000/health`
 - **Docs Swagger:** `http://localhost:8000/docs`
+- **OCR da revisão:** `http://127.0.0.1:8766/health` (Tesseract português no container)
 - **PostgreSQL:** `localhost:5432` (`comprova_lattes`)
 - **Redis:** `localhost:6379`
 
@@ -64,3 +72,26 @@ sem mensagens sensíveis. Gemini 3+ omite temperatura; o valor legado
 Extração usa `generateContent`, JSON Schema e validação Pydantic local. Sucesso
 com cinco certificados fictícios não equivale a avaliação científica final.
 Resultados e limitações: [sondagem de modelos](../docs/gemini-model-probe-20261115.md).
+
+
+## OCR iniciado junto com a API
+
+`docker compose up --build -d` também inicia `ocr`, sem precisar do terceiro terminal.
+A imagem `Dockerfile.ocr` instala Tesseract + idioma português e dependências `.[ocr]`.
+O OCR não recebe `.env`, chave Gemini, credenciais ou volumes de documentos. A porta
+é publicada somente em `127.0.0.1:8766`, mantendo a URL usada pelo frontend.
+O container usa `--container-bind --host 0.0.0.0` internamente; sem essa opção explícita,
+a CLI continua aceitando apenas loopback. CORS e verificação de Host continuam locais.
+
+Se você já iniciou o OCR pelo Python, encerre aquele terminal com Ctrl+C antes de
+subir o container: ambos usam a porta8766. Para conferir:
+
+```powershell
+docker compose ps ocr
+docker compose logs --tail 50 ocr
+```
+
+O healthcheck exige Tesseract/idioma disponíveis. `docker compose up --build -d ocr`
+inicia somente o OCR, sem banco/Redis/API. O frontend continua com `npm run dev`.
+Ambiente Linux do container pode reconhecer caracteres diferentemente do Windows;
+registre versões de Tesseract/Pillow/PDFium no ambiente experimental antes do freeze.

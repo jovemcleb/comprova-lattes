@@ -226,6 +226,7 @@ def test_template_depends_only_on_family_layout_and_category_and_matches_bytes(c
 
 
 def test_workbench_150_distribution_isolation_and_provenance():
+    assert TEMPLATE_PROVENANCE["template_version"] == "ptbr-contract-draft-v2"
     assert TEMPLATE_PROVENANCE["status"] == "draft_pending_human_validation"
     assert TEMPLATE_PROVENANCE["composition_origin"] == "agent_assisted_draft"
     assert TEMPLATE_PROVENANCE["human_approval_required_before_freeze"] is True

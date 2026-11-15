@@ -4,11 +4,11 @@ import {
   ASSOCIATIONS,
   FIELD_DEFS,
   FIELD_LABEL,
-  FIELD_STATES,
   REASONS,
   VERDICTS,
   emptyPhase1,
   emptyPhase2,
+  isCaseOcrAssisted,
   reasonAllows,
   validatePhase2,
   type Association,
@@ -19,6 +19,7 @@ import {
   type Verdict,
 } from '../../lib/annotation/draft'
 import type { CaseUpdater } from './DocumentPhase'
+import { ComparisonTable } from './ComparisonTable'
 import { DocumentViewer } from './DocumentViewer'
 import { ErrorSummary } from './ErrorSummary'
 import { RadioGroup } from './RadioGroup'
@@ -46,7 +47,6 @@ const RECORD_LABELS: [keyof PackageRecord, string][] = [
   ['sequence', 'Sequência'],
 ]
 
-const FIELD_STATE_LABEL = Object.fromEntries(FIELD_STATES.map(item => [item.value, item.label]))
 const ASSOCIATION_LABEL = Object.fromEntries(ASSOCIATIONS.map(item => [item.value, item.label]))
 const VERDICT_LABEL = Object.fromEntries(VERDICTS.map(item => [item.value, item.label]))
 
@@ -64,6 +64,8 @@ export function ComparisonPhase({ pkgCase, annotation, onChange }: ComparisonPha
   const hasDocument = document !== null
   const phase = annotation.phase2 ?? emptyPhase2()
   const locked = phase.status === 'saved'
+  const ocr = annotation.ocr_assistance
+  const ocrUsed = isCaseOcrAssisted(ocr)
 
   function edit(patch: Partial<Phase2>) {
     setProblems([])
@@ -105,38 +107,23 @@ export function ComparisonPhase({ pkgCase, annotation, onChange }: ComparisonPha
       {document && <DocumentViewer document={document} caseId={pkgCase.case_id} />}
       <div>
         <section aria-labelledby={`xml-${pkgCase.case_id}`}>
-          <h3 id={`xml-${pkgCase.case_id}`}>Fase 2 · Registro curricular (XML)</h3>
-          <dl className="annot-record">
-            {RECORD_LABELS.filter(([key]) => record[key] !== null).map(([key, label]) => (
-              <div key={key} style={{ display: 'contents' }}>
-                <dt>{label}</dt>
-                <dd>{String(record[key])}</dd>
-              </div>
-            ))}
-          </dl>
-          <details>
-            <summary>XML original</summary>
+          <h3 id={`xml-${pkgCase.case_id}`}>2. Compare com o que foi declarado no currículo</h3>
+          <p>O comprovante e o currículo são fontes diferentes e podem discordar. Mantenha sua transcrição fiel ao documento; nesta etapa você avalia a relação entre as fontes.</p>
+          <ComparisonTable record={record} annotation={annotation} hasDocument={hasDocument} />
+          <details className="annot-technical">
+            <summary>Detalhes técnicos e XML original</summary>
+            <dl className="annot-record">
+              {RECORD_LABELS.filter(([key]) => record[key] !== null).map(([key, label]) => (
+                <div key={key} style={{ display: 'contents' }}><dt>{label}</dt><dd>{String(record[key])}</dd></div>
+              ))}
+            </dl>
             <pre tabIndex={0}>{decodeXml(pkgCase)}</pre>
+            {ocrUsed && <p className="annot-note">Auxílio OCR consultado: {ocr.requested_count} vez(es); {ocr.provider}; {ocr.tesseract_version}; DPI {ocr.params?.dpi ?? 'não registrado'}. Cópias observadas: {ocr.observable_copied_fields.map(k => FIELD_LABEL[k]).join(', ') || 'nenhuma'}. O registro detalhado permanece no JSON.</p>}
           </details>
         </section>
 
-        <section className="annot-locked" aria-labelledby={`saved1-${pkgCase.case_id}`}>
-          <h3 id={`saved1-${pkgCase.case_id}`}>Sua transcrição (fase 1, travada)</h3>
-          {hasDocument ? (
-            <dl className="annot-record">
-              {FIELD_DEFS.map(def => {
-                const field = annotation.phase1.fields[def.key]
-                return (
-                  <div key={def.key} style={{ display: 'contents' }}>
-                    <dt>{def.label}</dt>
-                    <dd>{field.state === 'present' ? field.value : FIELD_STATE_LABEL[field.state ?? 'absent']}</dd>
-                  </div>
-                )
-              })}
-            </dl>
-          ) : (
-            <p>Ausência de documento confirmada; sem transcrição.</p>
-          )}
+        <section className="annot-transcription-controls" aria-label="Corrigir sua transcrição">
+          <p className="annot-note">Sua transcrição está salva. Se notar um erro de leitura, reabra a etapa anterior. Não troque o valor do comprovante apenas para coincidir com o currículo.</p>
           {confirmReopen ? (
             <div className="attention">
               <p>Reabrir a fase 1 depois de ver o XML apaga a fase 2 deste caso e fica registrado ({annotation.phase1_reopen_count + 1}ª reabertura) no arquivo exportado. Não copie valores do XML para o documento.</p>
@@ -149,23 +136,23 @@ export function ComparisonPhase({ pkgCase, annotation, onChange }: ComparisonPha
         </section>
 
         <section aria-labelledby={`judge-${pkgCase.case_id}`}>
-          <h3 id={`judge-${pkgCase.case_id}`}>Associação, classe e motivo</h3>
+          <h3 id={`judge-${pkgCase.case_id}`}>3. Registre sua conclusão</h3>
           <fieldset disabled={locked}>
             <RadioGroup<Association>
-              legend="O comprovante se refere a este registro curricular?"
+              legend="Este comprovante corresponde à atividade declarada?"
               name={`${pkgCase.case_id}-association`}
               options={ASSOCIATIONS}
               value={phase.association}
               disabledValues={hasDocument ? [] : ['sim']}
-              hint={hasDocument ? undefined : 'Sem documento neste caso: "sim" está indisponível.'}
+              hint={hasDocument ? 'Você pode reconhecer a mesma atividade e ainda encontrar diferenças nos dados. Associação não significa que todas as informações conferem.' : 'Sem documento neste caso: "sim" está indisponível.'}
               onChange={association => edit({ association })}
             />
             <RadioGroup<Verdict>
-              legend="Classe do registro"
+              legend="Como você avalia as informações comparadas?"
               name={`${pkgCase.case_id}-verdict`}
               options={VERDICTS}
               value={phase.verdict}
-              hint="Sem evidência suficiente, a classe é Inconclusivo. A classe não é preenchida nem sugerida pela interface."
+              hint="Validado: informações compatíveis conforme o guia. Divergente: diferença factual comprovada. Inconclusivo: evidência insuficiente ou ambígua. Você escolhe; a interface não calcula a resposta."
               onChange={setVerdict}
             />
             <label>
@@ -211,7 +198,7 @@ export function ComparisonPhase({ pkgCase, annotation, onChange }: ComparisonPha
                 <button type="button" className="secondary" onClick={() => edit({ status: 'in_progress', saved_at: null })}>Editar fase 2</button>
               </>
             ) : (
-              <button type="button" onClick={save}>Salvar fase 2 e concluir caso</button>
+              <button type="button" onClick={save}>Salvar avaliação e concluir caso</button>
             )}
           </div>
         </section>

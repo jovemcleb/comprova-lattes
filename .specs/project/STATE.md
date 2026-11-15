@@ -1,5 +1,69 @@
 # Project State & Open Decisions
 
+## Entrega para teste em outra máquina — 2026-11-15
+
+Verificação integrada: backend com 579 testes aprovados (94,14 s), Ruff global,
+lint e build do frontend aprovados. Ensaio de cinco casos continua separado da
+avaliação oficial; respostas individuais e pacote local não integram a publicação.
+Instruções de execução estão em `.specs/docs/human-annotation.md`.
+
+Corrigida dependência de execução `httpx`, antes restrita ao extra de desenvolvimento:
+a imagem Docker iniciava o supervisor Uvicorn, mas a aplicação falhava no import.
+Adicionado healthcheck HTTP da API. Imagens de API e worker reconstruídas;
+`/health` e `/validations?limit=1` retornaram HTTP 200 com CORS para o frontend.
+No ambiente local, PostgreSQL e Redis foram restabelecidos na rede Compose, usando
+POSTGRES_PORT=55432 e REDIS_PORT=56379 no `.env` ignorado para evitar conflito com
+IAgro. Seus volumes foram preservados; nenhum serviço IAgro foi interrompido.
+Isso verifica acesso local à API e ao banco, sem comprovar chamada ao Gemini.
+
+## OCR integrado ao Docker Compose — 2026-11-15
+
+Usuário aprovou OCR iniciar pelo mesmo compose up da API. Adicionados serviçoocr,
+Dockerfile.ocr(Tesseract+por+.[ocr]) e .dockerignore(sem.env/venv/cache no contexto).
+Porta publicada somente127.0.0.1:8766;bindinterno0.0.0.0 requer --container-bind
+explícito,CLI nativa loopback,CORS/Hostrestritos mantidos. Sem.env/chaveGemini noOCR.
+Coordenador:23testsreview_ocr aprovados13,95s,Rufffocal,composeconfig aprovados;
+imagemconstruída,compose up -d --wait ocr Healthy,health HTTP200availableTrue,
+OCRrealpilot HTTP200/hashconferido. ContainerTesseract5.5.0 (Windows5.4 anterior),
+nenhumresultado científicooficial;ambiente deve ser registrado antesfreeze.
+SomenteOCR iniciado para teste,nãoAPI/banco/worker ouGemini. DocsAPI/humanannotation
+atualizados. Próxima inicializaçãocompleta docker compose up --build -d incluiOCR.
+
+
+## UX de revisão concluído pelo coordenador — 2026-11-15
+
+Argon annotation-ux-clarity falhou sem créditos antes de editar. Coordenador aplicou
+ajudas de transcrição,comparisonTable11campos semautoverdict,fontes ladoalado,XML/IDs/
+auditoria recolhidos,documento aberturanovaguia. npm lint/build aprovados,verificação
+navegador com revisor de teste separado:etapa1semcomparação,título helper presente;
+etapa2tabela11linhas/detalhesrecolhidos,semoverflowdesktop. Detector estático avisou
+img semsrc;falso positivo porque BlobURL é atribuído no ref e renderização foi vista.
+JSON/protocolo/drafts preservados;ensaio humano não concluído nem aprovado.
+
+
+## Nomes legíveis recuperados e verificados — 2026-11-15
+
+Ponte readable-names retornou failed por turno sem resposta final; havia código e
+novo pacote. Coordenador verificou56tests(readable_synthetic_names,synthetic_leakage,
+certificate_templates,annotation_package,experiments) aprovados em29,05s eRufffocal.
+Pacote .tmp-pilot-review/pacote-anotacao-piloto-legivel.json validado,5casos,
+SHA256 38a09105695875b3cca746f9db846420f79086915d0919dd0a7811042297eb5e.
+Nomes/títulos/instituições/siglas visíveis curtos,IDs técnicos preservados.
+Não migrar respostas do pacoteantigo;ensaionovo temoutraversão/hash e continua
+rascunho,semaprovaçãohumanatemplates/guia ouavaliaçãooficial. OCRassistido concorrente
+não foi recolhido nem verificado nesta rodada.
+
+
+## Legibilidade da bancada aprovada — 2026-11-15
+
+Usuário cancelou painel OCR para cópia e aprovou substituir sufixos hexadecimais
+visíveis por nomes fictícios curtos/legíveis, preservando IDs técnicos internos.
+Alteração na preparação do piloto; sem seleção de nomes por score/resultado esperado.
+Rever determinismo, isolamento de emissores entre partições e coerência AD014.
+Novos documentos/pacote terão hashes diferentes; ensaio e anotações antigas não
+migram automaticamente. Ainda sem aprovação final de templates ou corpus oficial.
+
+
 ## Integração global verificada — 2026-11-15
 
 Coordenador recolheu statistics-integration succeeded e verificou estado integrado

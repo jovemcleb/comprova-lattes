@@ -19,8 +19,13 @@ DEFAULT_OCR_DPI = 300
 DEFAULT_OCR_TIMEOUT_SECONDS = 30.0
 DEFAULT_MAX_PDF_PAGES = 10
 DEFAULT_MAX_IMAGE_PIXELS = 25_000_000
+DEFAULT_PDF_RESAMPLING = "pdfium"
+SUPPORTED_PDF_RESAMPLING_MODES: frozenset[str] = frozenset({"pdfium", "pillow_lanczos"})
+DEFAULT_SMALL_IMAGE_UPSCALE_MAX_DIM = 1200
 MIN_OCR_DPI = 72
 MAX_OCR_DPI = 600
+MIN_OCR_PSM = 0
+MAX_OCR_PSM = 13
 MIN_OCR_TIMEOUT_SECONDS = 0.1
 MAX_OCR_TIMEOUT_SECONDS = 300.0
 TESSERACT_CMD_ENV = "TESSERACT_CMD"
@@ -184,6 +189,10 @@ class TesseractOCR:
         max_pdf_pages: int = DEFAULT_MAX_PDF_PAGES,
         max_image_pixels: int = DEFAULT_MAX_IMAGE_PIXELS,
         tessdata_dir: str | Path | None = None,
+        psm: int | None = None,
+        pdf_resampling: str = DEFAULT_PDF_RESAMPLING,
+        upscale_small_images: bool = False,
+        small_image_upscale_max_dim: int = DEFAULT_SMALL_IMAGE_UPSCALE_MAX_DIM,
         runner: SubprocessRunner = subprocess.run,
     ) -> None:
         if not isinstance(lang, str) or not lang.strip():
@@ -202,6 +211,17 @@ class TesseractOCR:
             raise ValueError("max_pdf_pages deve ser inteiro positivo.")
         if type(max_image_pixels) is not int or max_image_pixels < 1024:
             raise ValueError("max_image_pixels deve ser inteiro >= 1024.")
+        if psm is not None and (type(psm) is not int or not (MIN_OCR_PSM <= psm <= MAX_OCR_PSM)):
+            raise ValueError(f"PSM deve ser inteiro entre {MIN_OCR_PSM} e {MAX_OCR_PSM}.")
+        if pdf_resampling not in SUPPORTED_PDF_RESAMPLING_MODES:
+            raise ValueError(
+                f"pdf_resampling inválido: {pdf_resampling!r}. "
+                f"Permitidos: {sorted(SUPPORTED_PDF_RESAMPLING_MODES)}."
+            )
+        if type(upscale_small_images) is not bool:
+            raise ValueError("upscale_small_images deve ser booleano.")
+        if type(small_image_upscale_max_dim) is not int or small_image_upscale_max_dim < 64:
+            raise ValueError("small_image_upscale_max_dim deve ser inteiro >= 64.")
 
         self.executable = executable
         self.lang = lang.strip()
@@ -215,6 +235,10 @@ class TesseractOCR:
             if tessdata_dir is not None
             else (Path(env_tessdata) if env_tessdata else None)
         )
+        self.psm = psm
+        self.pdf_resampling = pdf_resampling
+        self.upscale_small_images = upscale_small_images
+        self.small_image_upscale_max_dim = small_image_upscale_max_dim
         self.runner = runner
         self._verified_languages: tuple[str, ...] | None = None
 
@@ -322,6 +346,24 @@ class TesseractOCR:
                     )
                 img.load()
                 converted = img if img.mode in ("L", "RGB", "1") else img.convert("RGB")
+                if (
+                    self.upscale_small_images
+                    and max(width, height) < self.small_image_upscale_max_dim
+                    and self.dpi > MIN_OCR_DPI
+                ):
+                    scale = self.dpi / 72.0
+                    target_w = max(1, round(width * scale))
+                    target_h = max(1, round(height * scale))
+                    if target_w * target_h > self.max_image_pixels:
+                        raise OCRRenderError(
+                            f"Imagem reamostrada ({target_w}x{target_h}) excede o limite de "
+                            f"{self.max_image_pixels} pixels."
+                        )
+                    if converted.mode == "1":
+                        converted = converted.convert("L")
+                    converted = converted.resize(
+                        (target_w, target_h), image_cls.Resampling.LANCZOS
+                    )
                 converted.save(target_path, format="PNG", dpi=(self.dpi, self.dpi))
         except OCRRenderError:
             raise
@@ -332,9 +374,10 @@ class TesseractOCR:
 
     def _prepare_pdf_pages(self, data: bytes, tmp_dir: Path) -> list[Path]:
         """Rasteriza páginas do PDF via pypdfium2 -> Pillow sem extrair texto embutido."""
-        _load_pillow()
+        _, image_cls, _ = _load_pillow()
         pdfium = _load_pdfium()
         scale = self.dpi / 72.0
+        render_scale = 1.0 if self.pdf_resampling == "pillow_lanczos" else scale
         pdf_doc = None
         try:
             pdf_doc = pdfium.PdfDocument(data)
@@ -351,13 +394,24 @@ class TesseractOCR:
                 page = pdf_doc[idx]
                 bitmap = None
                 try:
-                    bitmap = page.render(scale=scale)
+                    bitmap = page.render(scale=render_scale)
                     pil_image = bitmap.to_pil()
                     width, height = pil_image.size
                     if width <= 0 or height <= 0 or width * height > self.max_image_pixels:
                         raise OCRRenderError(
                             f"Página PDF {idx + 1} rasterizada ({width}x{height}) excede o limite "
                             f"de {self.max_image_pixels} pixels."
+                        )
+                    if self.pdf_resampling == "pillow_lanczos" and abs(scale - 1.0) > 1e-6:
+                        target_w = max(1, round(width * scale))
+                        target_h = max(1, round(height * scale))
+                        if target_w * target_h > self.max_image_pixels:
+                            raise OCRRenderError(
+                                f"Página PDF {idx + 1} reamostrada ({target_w}x{target_h}) excede "
+                                f"o limite de {self.max_image_pixels} pixels."
+                            )
+                        pil_image = pil_image.resize(
+                            (target_w, target_h), image_cls.Resampling.LANCZOS
                         )
                     out_path = tmp_dir / f"page_{idx + 1:04d}.png"
                     pil_image.save(out_path, format="PNG", dpi=(self.dpi, self.dpi))
@@ -413,6 +467,8 @@ class TesseractOCR:
                     "--dpi",
                     str(self.dpi),
                 ]
+                if self.psm is not None:
+                    cmd.extend(["--psm", str(self.psm)])
                 completed = self._run_command(cmd)
                 if completed.returncode != 0:
                     stderr = (completed.stderr or "").strip()
@@ -482,6 +538,9 @@ class TesseractOCR:
             "tessdata_dir": str(self.tessdata_dir) if self.tessdata_dir else None,
             "dpi": self.dpi,
             "pdf_render_scale": self.dpi / 72.0,
+            "pdf_resampling": self.pdf_resampling,
+            "upscale_small_images": self.upscale_small_images,
+            "psm": self.psm,
             "timeout_seconds": self.timeout_seconds,
             "max_pdf_pages": self.max_pdf_pages,
             "max_image_pixels": self.max_image_pixels,

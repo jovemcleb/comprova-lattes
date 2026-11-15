@@ -13,7 +13,196 @@ from comprova_lattes.schemas.lattes import LattesCategory, LattesCurriculum
 
 from .render import pdf, png, raster
 
-SYNTHETIC_ACRONYMS = {"IF": "INSTITUTO FICTICIO"}
+SYNTHETIC_ACRONYMS: dict[str, str] = {
+    "I": "Instituto",
+    "C": "Centro",
+    "F": "Faculdade",
+    "E": "Escola",
+}
+
+_HOLDER_FIRST_NAMES: tuple[str, ...] = (
+    "Ana",
+    "Bruno",
+    "Carla",
+    "Diego",
+    "Elisa",
+    "Fabio",
+    "Gabriel",
+    "Helena",
+    "Igor",
+    "Joana",
+    "Lucas",
+    "Marina",
+    "Natalia",
+    "Orlando",
+    "Paula",
+    "Rafael",
+    "Sofia",
+    "Tiago",
+    "Vanessa",
+    "Vitor",
+)
+
+_HOLDER_SURNAMES: tuple[str, ...] = (
+    "Almeida",
+    "Barbosa",
+    "Campos",
+    "Cardoso",
+    "Dias",
+    "Duarte",
+    "Ferreira",
+    "Freitas",
+    "Gomes",
+    "Lima",
+    "Lopes",
+    "Martins",
+    "Mendes",
+    "Moreira",
+    "Nunes",
+    "Oliveira",
+    "Pereira",
+    "Ribeiro",
+    "Santos",
+    "Teixeira",
+)
+
+_INSTITUTION_TYPES: tuple[str, ...] = ("Instituto", "Centro", "Faculdade", "Escola")
+
+_INSTITUTION_PLACES: tuple[str, ...] = (
+    "Aurora",
+    "Bosque",
+    "Cerrado",
+    "Delta",
+    "Fonte",
+    "Gruta",
+    "Horizonte",
+    "Jardim",
+    "Lago",
+    "Monte",
+    "Prado",
+    "Ribeira",
+    "Serra",
+    "Vale",
+)
+
+_INSTITUTION_MODIFIERS: tuple[str, ...] = (
+    "Azul",
+    "Central",
+    "Digital",
+    "Global",
+    "Integral",
+    "Leste",
+    "Municipal",
+    "Norte",
+    "Oeste",
+    "Regional",
+    "Sul",
+    "Verde",
+)
+
+_EXCLUDED_ACRONYMS: frozenset[str] = frozenset(
+    {
+        "API",
+        "CAD",
+        "CAL",
+        "CAM",
+        "CAN",
+        "CAR",
+        "CAS",
+        "CEP",
+        "CIA",
+        "CPF",
+        "CSS",
+        "CSV",
+        "ECA",
+        "ERA",
+        "ESA",
+        "EVA",
+        "FAD",
+        "FAP",
+        "FIM",
+        "FMI",
+        "ICA",
+        "IDA",
+        "IDS",
+        "IMA",
+        "IML",
+        "IRA",
+        "ISO",
+        "IVA",
+        "MEC",
+        "OAB",
+        "OCR",
+        "PDF",
+        "PNG",
+        "PUC",
+        "SUS",
+        "TCC",
+        "USP",
+        "XML",
+    }
+)
+
+_TOPIC_PHRASES: tuple[str, ...] = (
+    "Redes Locais",
+    "Banco de Dados",
+    "Sistemas Digitais",
+    "Engenharia de Software",
+    "Sistemas em Nuvem",
+    "Arquitetura Web",
+    "Ciência de Dados",
+    "Lógica Aplicada",
+    "Gestão de Projetos",
+    "Qualidade de Software",
+    "Modelagem de Processos",
+    "Automação Rural",
+    "Energia Solar",
+    "Ensino de Ciências",
+    "Educação Ambiental",
+    "Direito Digital",
+    "Saúde Coletiva",
+    "Geoprocessamento Rural",
+    "Estatística Aplicada",
+    "Robótica Educacional",
+    "Computação Gráfica",
+    "Sistemas Embarcados",
+    "Análise Territorial",
+    "Inovação Tecnológica",
+)
+
+_ACADEMIC_TITLE_PREFIXES: tuple[str, ...] = (
+    "Especialização em",
+    "Formação em",
+    "Aperfeiçoamento em",
+    "Qualificação em",
+)
+
+_COMPLEMENTARY_TITLE_PREFIXES: tuple[str, ...] = (
+    "Curso de",
+    "Oficina de",
+    "Extensão em",
+    "Módulo de",
+)
+
+_ACTIVITY_TITLE_PREFIXES: tuple[str, ...] = (
+    "Projeto de",
+    "Estudo sobre",
+    "Relato de",
+    "Painel sobre",
+    "Trabalho em",
+    "Pesquisa sobre",
+)
+
+_EVENT_PREFIXES: tuple[str, ...] = (
+    "Congresso de",
+    "Encontro de",
+    "Jornada de",
+    "Mostra de",
+    "Seminário de",
+    "Simpósio de",
+    "Fórum de",
+    "Colóquio de",
+)
 
 FIELD_LABELS: dict[str, str] = {
     "holder_name": "Titular",
@@ -67,7 +256,7 @@ DEFAULT_TEMPLATE: tuple[str, str] = (
 )
 
 TEMPLATE_PROVENANCE: dict[str, object] = {
-    "template_version": "ptbr-contract-draft-v1",
+    "template_version": "ptbr-contract-draft-v2",
     "status": "draft_pending_human_validation",
     "composition_origin": "agent_assisted_draft",
     "human_approval_required_before_freeze": True,
@@ -86,29 +275,135 @@ TEMPLATE_PROVENANCE: dict[str, object] = {
 }
 
 
+def _stable_index(token: str, size: int) -> int:
+    digest = hashlib.sha256(token.encode()).digest()
+    return int.from_bytes(digest[:8], "big") % size
+
+
+def institution_acronym(institution_name: str) -> str:
+    """Deriva sigla curta determinística a partir das iniciais da instituição."""
+    words = [part for part in institution_name.split() if part and part[0].isalnum()]
+    return "".join(word[0].upper() for word in words)
+
+
+def _holder_candidates() -> list[str]:
+    return [f"{first} {last}" for first in _HOLDER_FIRST_NAMES for last in _HOLDER_SURNAMES]
+
+
+def _institution_candidates() -> list[str]:
+    return [
+        f"{kind} {place} {modifier}"
+        for kind in _INSTITUTION_TYPES
+        for place in _INSTITUTION_PLACES
+        for modifier in _INSTITUTION_MODIFIERS
+        if f"{kind[0]}{place[0]}{modifier[0]}".upper() not in _EXCLUDED_ACRONYMS
+    ]
+
+
+def _pick_holder(seed_key: str, used: set[str]) -> str:
+    two_word = _holder_candidates()
+    total = len(two_word)
+    for attempt in range(total):
+        candidate = two_word[_stable_index(f"{seed_key}:{attempt}", total)]
+        if candidate not in used:
+            return candidate
+    start = _stable_index(seed_key, total)
+    for offset in range(total):
+        candidate = two_word[(start + offset) % total]
+        if candidate not in used:
+            return candidate
+    for first in _HOLDER_FIRST_NAMES:
+        for last1 in _HOLDER_SURNAMES:
+            for last2 in _HOLDER_SURNAMES:
+                if last1 == last2:
+                    continue
+                candidate = f"{first} {last1} {last2}"
+                if candidate not in used:
+                    return candidate
+    raise RuntimeError("Vocabulário de titulares esgotado")
+
+
+def _pick_institution(
+    seed_key: str,
+    used_institutions: set[str],
+    used_acronyms: set[str],
+) -> str:
+    candidates = _institution_candidates()
+    total = len(candidates)
+    for attempt in range(total):
+        candidate = candidates[_stable_index(f"{seed_key}:{attempt}", total)]
+        acronym = institution_acronym(candidate)
+        if candidate not in used_institutions and acronym not in used_acronyms:
+            return candidate
+    start = _stable_index(seed_key, total)
+    for offset in range(total):
+        candidate = candidates[(start + offset) % total]
+        acronym = institution_acronym(candidate)
+        if candidate not in used_institutions and acronym not in used_acronyms:
+            return candidate
+    raise RuntimeError("Vocabulário de instituições esgotado")
+
+
+def _pick_title(seed_key: str, category: int, used_titles: set[str]) -> tuple[str, str]:
+    if category == 0:
+        prefixes = _ACADEMIC_TITLE_PREFIXES
+    elif category == 1:
+        prefixes = _COMPLEMENTARY_TITLE_PREFIXES
+    else:
+        prefixes = _ACTIVITY_TITLE_PREFIXES
+    pairs = [(f"{prefix} {topic}", topic) for prefix in prefixes for topic in _TOPIC_PHRASES]
+    total = len(pairs)
+    for attempt in range(total):
+        title, topic = pairs[_stable_index(f"{seed_key}:{attempt}", total)]
+        if title not in used_titles:
+            return title, topic
+    start = _stable_index(seed_key, total)
+    for offset in range(total):
+        title, topic = pairs[(start + offset) % total]
+        if title not in used_titles:
+            return title, topic
+    raise RuntimeError("Vocabulário de títulos esgotado")
+
+
+def _pick_event(seed_key: str, excluded_topic: str, used_events: set[str]) -> str:
+    candidates = [
+        f"{prefix} {topic}"
+        for prefix in _EVENT_PREFIXES
+        for topic in _TOPIC_PHRASES
+        if topic != excluded_topic
+    ]
+    total = len(candidates)
+    for attempt in range(total):
+        candidate = candidates[_stable_index(f"{seed_key}:{attempt}", total)]
+        if candidate not in used_events:
+            return candidate
+    start = _stable_index(seed_key, total)
+    for offset in range(total):
+        candidate = candidates[(start + offset) % total]
+        if candidate not in used_events:
+            return candidate
+    raise RuntimeError("Vocabulário de eventos esgotado")
+
+
 def synthetic_acronyms(cases: tuple["Case", ...]) -> dict[str, str]:
     """Tabela explícita por emissor; preserva a identidade exclusiva da família."""
-    return {
-        f"{acronym}{c.issuer_id.upper()}": f"{name} {c.issuer_id.upper()}"
-        for c in cases
-        for acronym, name in SYNTHETIC_ACRONYMS.items()
-    }
+    table: dict[str, str] = {}
+    for c in cases:
+        inst = c.curriculum.records[0].institution
+        if inst:
+            table[institution_acronym(inst)] = inst
+    return table
 
 
 def alternative_identity(seed: int, family_id: str, domain: str) -> str:
-    """Deriva sufixo hex neutro de 12 caracteres distinto de family_id em domínio alternativo."""
+    """Deriva nome alternativo neutro da mesma distribuição em domínio especificado."""
     normalized_family = family_id.lower()
-    base = normalized_family.upper()
-    for attempt in range(4):
-        suffix = "" if attempt == 0 else f":{attempt}"
-        candidate = (
-            hashlib.sha256(f"{seed}:{normalized_family}:alt:{domain}{suffix}".encode())
-            .hexdigest()[:12]
-            .upper()
-        )
-        if candidate != base:
-            return candidate
-    raise RuntimeError("Falha ao derivar sufixo alternativo distinto")
+    seed_key = f"{seed}:{normalized_family}:alt:{domain}"
+    if domain == "holder_name":
+        return _pick_holder(seed_key, set())
+    if domain == "issuer_institution":
+        return _pick_institution(seed_key, set(), set())
+    raise ValueError(f"Domínio alternativo desconhecido: {domain!r}")
 
 
 class Case(BaseModel):
@@ -153,13 +448,20 @@ class Corpus(BaseModel):
         return tuple(c for c in self.cases if c.partition == partition)
 
 
-def _xml(category: int, identity: str) -> bytes:
+def _xml(
+    category: int,
+    *,
+    holder_name: str,
+    institution_name: str,
+    title: str,
+    event_name: str | None = None,
+) -> bytes:
     root = Element("CURRICULO-VITAE")
-    general = SubElement(root, "DADOS-GERAIS", {"NOME-COMPLETO": f"PESSOA FICTICIA {identity}"})
+    general = SubElement(root, "DADOS-GERAIS", {"NOME-COMPLETO": holder_name})
     attrs = {
         "SEQUENCIA-FORMACAO": "1",
-        "NOME-INSTITUICAO": f"INSTITUTO FICTICIO {identity}",
-        "NOME-CURSO": f"CURSO SINTETICO {identity}",
+        "NOME-INSTITUICAO": institution_name,
+        "NOME-CURSO": title,
         "ANO-DE-INICIO": "2020",
         "ANO-DE-CONCLUSAO": "2024",
         "CARGA-HORARIA": "40",
@@ -185,16 +487,15 @@ def _xml(category: int, identity: str) -> bytes:
             tag = ["APRESENTACAO-DE-TRABALHO", "ORGANIZACAO-DE-EVENTO"][category - 3]
             suffix = ["DA-APRESENTACAO-DE-TRABALHO", "DA-ORGANIZACAO-DE-EVENTO"][category - 3]
         child = SubElement(parent, tag, {"SEQUENCIA-PRODUCAO": "1"})
-        basic = {"TITULO": f"TRABALHO SINTETICO {identity}", "ANO": "2024"}
+        basic = {"TITULO": title, "ANO": "2024"}
         if category == 2:
             basic["TIPO-PARTICIPACAO"] = "PARTICIPANTE"
         SubElement(child, f"DADOS-BASICOS-{suffix}", basic)
         detail = {
-            "NOME-INSTITUICAO" if category == 2 else "INSTITUICAO-PROMOTORA":
-                f"INSTITUTO FICTICIO {identity}",
+            "NOME-INSTITUICAO" if category == 2 else "INSTITUICAO-PROMOTORA": institution_name,
         }
-        if category != 4:
-            detail["NOME-DO-EVENTO"] = f"EVENTO FICTICIO {identity}"
+        if category != 4 and event_name is not None:
+            detail["NOME-DO-EVENTO"] = event_name
         SubElement(child, f"DETALHAMENTO-{suffix}", detail)
     return tostring(root, encoding="utf-8", xml_declaration=True)
 
@@ -263,12 +564,7 @@ def _apply_legitimate_variation(values: dict[str, object], index: int) -> None:
         for key in ("holder_name", "activity_title", "event_name", "issuer_institution"):
             text = values[key]
             if isinstance(text, str):
-                parts = text.split()
-                values[key] = (
-                    " ".join([*(word.capitalize() for word in parts[:-1]), parts[-1]])
-                    if len(parts) > 1
-                    else text.lower()
-                )
+                values[key] = text.upper() if text != text.upper() else text.lower()
     else:
         separators = {
             "holder_name": ", ",
@@ -289,7 +585,7 @@ def generate(*, seed: int, pilot_families: int, final_families: int) -> Corpus:
     Família inclui registro-base, emissor e template exclusivos; variantes do
     mesmo registro compartilham emissor e presença de relação sigla/evidência
     AD-014 (regra prévia por índice de família, independente de classe/operador).
-    Identidades, layout e seed de ruído derivam de (seed, partition, index),
+    Identidades legíveis, layout e seed de ruído derivam de (seed, partition, index),
     mantendo o piloto invariável quando final_families muda e o padrão de ruído
     estável por família sem alterar a degradação. Categorias alternam em cada
     partição, com equilíbrio exato nos tamanhos aprovados múltiplos de cinco
@@ -302,13 +598,42 @@ def generate(*, seed: int, pilot_families: int, final_families: int) -> Corpus:
     if pilot_families < 1 or final_families < 1:
         raise ValueError("Ambas as partições precisam de famílias")
     cases = []
+    used_holders: set[str] = set()
+    used_institutions: set[str] = set()
+    used_acronyms: set[str] = set()
+    used_titles: set[str] = set()
+    used_events: set[str] = set()
     for partition, total in (("pilot", pilot_families), ("final", final_families)):
         for index in range(total):
             fid = hashlib.sha256(f"{seed}:{partition}:{index}".encode()).hexdigest()[:12]
             layout = int(fid, 16)
             category = index % 5
             has_ad014 = index % 2 == 0
-            xml = _xml(category, fid.upper())
+            family_seed = f"{seed}:{partition}:{index}"
+            holder_name = _pick_holder(f"{family_seed}:holder", used_holders)
+            used_holders.add(holder_name)
+            institution_name = _pick_institution(
+                f"{family_seed}:institution",
+                used_institutions,
+                used_acronyms,
+            )
+            used_institutions.add(institution_name)
+            used_acronyms.add(institution_acronym(institution_name))
+            activity_title, title_topic = _pick_title(
+                f"{family_seed}:title", category, used_titles
+            )
+            used_titles.add(activity_title)
+            event_name: str | None = None
+            if category in (2, 3):
+                event_name = _pick_event(f"{family_seed}:event", title_topic, used_events)
+                used_events.add(event_name)
+            xml = _xml(
+                category,
+                holder_name=holder_name,
+                institution_name=institution_name,
+                title=activity_title,
+                event_name=event_name,
+            )
             curriculum = parse_lattes_xml(xml)
             r = curriculum.records[0]
             base = {
@@ -328,7 +653,7 @@ def generate(*, seed: int, pilot_families: int, final_families: int) -> Corpus:
                 cid = hashlib.sha256(f"{fid}:{category}:{variant}".encode()).hexdigest()[:20]
                 values = dict(base)
                 expected = MatchStatus.VALIDADO
-                acronym_suffix = fid.upper()
+                doc_institution = institution_name
                 if operator == "legitimate":
                     _apply_legitimate_variation(values, index)
                 elif operator == "factual_mutation":
@@ -338,18 +663,28 @@ def generate(*, seed: int, pilot_families: int, final_families: int) -> Corpus:
                         for field in ("activity_year", "start_year", "end_year"):
                             values[field] += 7
                     elif category == 3:
-                        values["holder_name"] = (
-                            f"PESSOA FICTICIA {alternative_identity(seed, fid, 'holder_name')}"
+                        alt_holder = _pick_holder(
+                            f"{seed}:{fid.lower()}:alt:holder_name",
+                            used_holders,
                         )
+                        used_holders.add(alt_holder)
+                        values["holder_name"] = alt_holder
                     else:
-                        acronym_suffix = alternative_identity(seed, fid, "issuer_institution")
-                        values["issuer_institution"] = f"INSTITUTO FICTICIO {acronym_suffix}"
+                        alt_institution = _pick_institution(
+                            f"{seed}:{fid.lower()}:alt:issuer_institution",
+                            used_institutions,
+                            used_acronyms,
+                        )
+                        used_institutions.add(alt_institution)
+                        used_acronyms.add(institution_acronym(alt_institution))
+                        values["issuer_institution"] = alt_institution
+                        doc_institution = alt_institution
                     expected = MatchStatus.DIVERGENTE
                 elif operator in ("omission", "no_document"):
                     values["holder_name"] = None
                     expected = MatchStatus.INCONCLUSIVO
                 if has_ad014 and operator != "no_document":
-                    acronym = f"IF{acronym_suffix}"
+                    acronym = institution_acronym(doc_institution)
                     values["issuer_acronym"] = acronym
                     values["issuer_name_acronym_evidence"] = (
                         f"{values['issuer_institution']} - {acronym}"

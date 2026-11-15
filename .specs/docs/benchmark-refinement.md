@@ -125,3 +125,30 @@ Com aprovação explícita do usuário, `essential_fields(record)` passou a incl
 
 - **Eliminação de falsos `VALIDADO`:** no fixture independente de `tests/test_performance_reporting_contract.py` (`case-2`, `ORGANIZACAO_EVENTO` com instituição limítrofe) e nos casos `ORGANIZACAO_EVENTO` de `factual_mutation` com `seed=93` (`3a9914e74fbaf0f7095f` no piloto e `b280019df0eb6527a91e` no final), o veredito deixa de ser `VALIDADO` e passa a `INCONCLUSIVO` (`EVIDENCIA_INSUFICIENTE`), preservando `expected == "DIVERGENTE"` e `error_cause == "rule"`. No recorte `seed=93` (`5+5` famílias, `LEVENSHTEIN_NORM`, limiares não calibrados do teste), `macro_f1` observada passa de `0.8849206349206349` para `0.8863636363636364`, enquanto os erros de `titular` limítrofe em `APRESENTACAO_TRABALHO` permanecem `INCONCLUSIVO`.
 - **Custo esperado em `INCONCLUSIVO`:** exigir comprovação institucional quando declarada no XML transfere para `INCONCLUSIVO` (`review_required=True`) certificados de eventos que omitam a entidade emissora, tragam apenas sigla isolada sem `AD-014`/dicionário ou caiam na faixa cinzenta $[\tau_{\text{inst\_baixo}}, \tau_{\text{inst\_alto}})$. Isso protege contra validação indevida sem evidência, ao custo de elevar a fila de revisão humana (`AD-013`) e reduzir a taxa de confirmação automática quando comprovantes de eventos forem omissos ou abreviados sem contexto, até calibração piloto adequada dos limiares.
+
+---
+
+## 7. Nomes Fictícios Curtos e Legíveis na Bancada Sintética (2026-11-15)
+
+### 7.1 Escopo e motivação
+
+Para evitar erros humanos de transcrição e fadiga durante a anotação manual do piloto (com painel de OCR assistido descartado), todos os valores humanos visíveis nos XMLs e certificados sintéticos (`holder_name`, `issuer_institution`, `issuer_acronym`, `activity_title`, `event_name` e `issuer_name_acronym_evidence`) foram substituídos de sufixos hexadecimais longos (`<12-hex>`) e marcadores artificiais (`PESSOA FICTICIA`, `INSTITUTO FICTICIO`, `OUTRA PESSOA SINTETICA`, `INSTITUICAO DIVERGENTE SINTETICA`) para nomes fictícios curtos em português brasileiro provenientes de vocabulário controlado e determinístico (`experiments/synthetic.py`).
+
+- **Preservação de IDs internos:** `case_id` (`20` hex), `family_id` (`12` hex), `template_id` (`t-<12-hex>`) e `issuer_id` (`iss-<12-hex>`) permanecem inalterados e nunca aparecem no conteúdo legível dos documentos ou XMLs.
+- **Unicidade, isolamento e invariância:** famílias geram identidades distintas sem colisão de titular, instituição, sigla, título ou evento entre si nem entre `pilot` e `final` na configuração aprovada (`10/20` famílias = `50/100` casos), mantendo `pilot` invariável ao crescimento de `final_families`.
+- **Bijectividade de siglas e `alternative_identity`:** instituições usam exatamente 3 palavras com letras iniciais únicas por posição (`_INSTITUTION_TYPES`, `_INSTITUTION_PLACES`, `_INSTITUTION_MODIFIERS`), produzindo sigla de 3 letras (`institution_acronym`) bijetiva sem tabela global oculta (`SYNTHETIC_ACRONYMS = {"I": "Instituto", "C": "Centro", "F": "Faculdade", "E": "Escola"}` e `synthetic_acronyms(cases)` derivado das famílias selecionadas). As identidades alternativas de `factual_mutation` compartilham a mesma distribuição e formato neutro, garantindo diferença factual em relação à identidade normal da família e coerência `AD-014` (`issuer_name_acronym_evidence == f"{issuer_institution} - {issuer_acronym}"`).
+- **Versão de template:** `TEMPLATE_PROVENANCE["template_version"]` foi atualizada para `"ptbr-contract-draft-v2"`, permanecendo em rascunho sem aprovação humana formal nem calibração/congelamento.
+
+### 7.2 Efeito qualitativo observado na similaridade (piloto, limiares não calibrados do teste)
+
+Sem ajustar nomes por Levenshtein/limiares e sem alterar `matcher/` nem limiares de referência (`holder_low = institution_low = 0.4`, `high = 0.95`), observou-se o efeito esperado da transição para nomes curtos da mesma distribuição natural sobre o `pilot` com `experiment2` (sem estudo oficial nem conclusão sobre o `final`):
+
+1. **`seed=93` (`pilot`, `n=25`, `5` famílias):**
+   - `LEVENSHTEIN_NORM`: `macro_f1 = 1.0`, com mutação de titular em `APRESENTACAO_TRABALHO` (`0.3636`, `CONFLICT`/`DIVERGENTE`) e mutação de instituição em `ORGANIZACAO_EVENTO` (`0.25`, `CONFLICT`/`DIVERGENTE`).
+   - `JARO_WINKLER`: `macro_f1 = 0.8864`, com prefixos comuns elevando titular (`0.6034`) e instituição (`0.5878`) para `INCONCLUSIVE_BORDERLINE`/`INCONCLUSIVO`.
+   - `TOKEN_HYBRID`: `macro_f1 = 1.0`, separando tokens distintos (`0.0` em ambos -> `CONFLICT`/`DIVERGENTE`).
+2. **`seed=42` (`pilot`, `n=50`, `10` famílias):**
+   - `LEVENSHTEIN_NORM`: `macro_f1 = 0.9471`; mutações de titular permanecem `CONFLICT`/`DIVERGENTE` (`0.1429`, `0.2857`), enquanto mutações de instituição com radicais compartilhados (`Instituto`/`Centro`/`Faculdade`/`Escola`) sobem para `0.4828` e `0.5238`, entrando na faixa cinzenta (`INCONCLUSIVE_BORDERLINE`/`INCONCLUSIVO`) sob `institution_low = 0.4`.
+   - `JARO_WINKLER`: `macro_f1 = 0.8864` (titular `0.5191`/`0.5469`, instituição `0.6715`/`0.8457`, todos `INCONCLUSIVE_BORDERLINE`/`INCONCLUSIVO`).
+   - `TOKEN_HYBRID`: `macro_f1 = 1.0` (titular `0.0`, instituição `0.2` quando há compartilhamento de radical -> `CONFLICT`/`DIVERGENTE`).
+3. **Variação legítima:** títulos com variação ASCII/caixa preservam `similarity_score = 1.0` após normalização e instituições com variação de caixa também mantêm `1.0`, enquanto substituições por sigla seguem resolvidas por `DOCUMENT_ACRONYM_EQUIVALENCE` ou `ACRONYM_EQUIVALENCE` (`outcome = MATCH`, sem necessidade de similaridade caractere-a-caractere). O aumento de similaridade entre instituições plausíveis sob métricas de caracteres evidencia a relevância científica de calibrar limiares e comparar métricas após validação humana dos templates no piloto.

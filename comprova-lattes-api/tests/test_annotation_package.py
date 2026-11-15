@@ -82,11 +82,23 @@ def test_public_package_contains_no_gold_operator_class_or_identity_metadata(cor
     assert package["guide_version"] == GUIDE_VERSION
     text = json.dumps(package, ensure_ascii=False).lower()
     assert not [token for token in LEAK_TOKENS if token in text]
+    non_blob_values = json.dumps(
+        [
+            {
+                "case_id": public["case_id"],
+                "mime_type": public["document"]["mime_type"] if public["document"] else None,
+                "record": {k: v for k, v in public["record"].items() if k != "record_id"},
+                "xml": public["xml"],
+            }
+            for public in package["cases"]
+        ],
+        ensure_ascii=False,
+    ).lower()
     for case in _originals(corpus, built).values():
         assert case.case_id not in text
         assert case.template_id.lower() not in text
         if case.gold is not None and case.gold.issuer_acronym:
-            assert case.gold.issuer_acronym.lower() not in text
+            assert not re.search(rf"\b{re.escape(case.gold.issuer_acronym.lower())}\b", non_blob_values)
 
 
 def test_family_identity_values_only_appear_inside_compared_content(corpus, built):

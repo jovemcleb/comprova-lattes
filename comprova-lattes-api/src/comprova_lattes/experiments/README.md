@@ -74,22 +74,35 @@ estatística ou realismo documental. Corpus e manifestos anteriores devem ser re
 Eventos e produção técnica usam subnós `DADOS-BASICOS-*` e `DETALHAMENTO-*`.
 Organização mantém `event_name=None` conforme o parser, sem inferir evento do
 título; apresentação traz `participation_role_raw="APRESENTADOR"` no documento.
-Variação legítima combina espaços no titular, uma substituição ASCII no título
-longo e sigla institucional. `SYNTHETIC_ACRONYMS = {"IF": "INSTITUTO FICTICIO"}`
-define os radicais exportados; `synthetic_acronyms(corpus.cases)` materializa a
-tabela explícita `IF{FAMILY_ID} -> INSTITUTO FICTICIO {FAMILY_ID}`. Passe essa tabela
-em `MatcherConfig.acronym_table`, com versão explícita, e inclua seus bytes no
-artefato `acronyms` congelado. Não existe tabela global mutável compartilhando
-emissores entre partições.
+Variação legítima alterna três estilos determinísticos por `family_id`: espaços no
+titular + substituição ASCII no título longo, caixa alta/baixa na instituição, ou
+substituição da instituição por sua sigla curta (`institution_acronym`). Todos os
+valores humanos (titular, instituição, sigla, título, evento e evidência literal
+AD-014) usam nomes fictícios curtos e legíveis em português brasileiro oriundos de
+vocabulário controlado e determinístico (sem sufixos hexadecimais, sem marcadores
+artificiais e preservando `case_id`, `family_id`, `template_id` e `issuer_id`
+internos). `SYNTHETIC_ACRONYMS = {"I": "Instituto", "C": "Centro", "F": "Faculdade",
+"E": "Escola"}` define os radicais exportados; `synthetic_acronyms(corpus.cases)`
+materializa a tabela explícita `{sigla_3_letras: instituicao}` derivada das
+instituições de 3 palavras presentes nas famílias passadas (sem colisões entre
+`pilot` e `final` e com `pilot` invariável ao crescimento de `final_families`). Passe
+essa tabela em `MatcherConfig.acronym_table`, com versão explícita, e inclua seus
+bytes no artefato `acronyms` congelado. Não existe tabela global mutável compartilhando
+emissores entre partições; templates de certificado permanecem em rascunho
+(`TEMPLATE_PROVENANCE["template_version"] == "ptbr-contract-draft-v2"`, ainda sem
+validação humana).
 
-Uma mutação factual por categoria preserva âncoras de associação: especialização
-40→45 horas; extensão 40→400 horas; participação ano inicial/final/atividade +7;
-apresentação troca o titular por `OUTRA PESSOA SINTETICA`; organização troca a
-instituição por `INSTITUICAO DIVERGENTE SINTETICA`. Textos rasterizados suportam
-ASCII imprimível, acentos pt-BR (`NFC`/`NFD`), parênteses e quebras de linha,
-rejeitando caracteres fora do repertório suportado com `ValueError`. A vantagem
-do proposto sobre A/B nos testes com siglas configuradas verifica o software
-nesta bancada construída, sem demonstrar superioridade em dados independentes.
+Uma mutação factual por categoria preserva âncoras de associação e usa identidades
+alternativas da mesma distribuição legível (`alternative_identity`, sem termos como
+`OUTRA`, `DIVERGENTE` ou `MUTADO`): especialização 40→45 horas; extensão 40→400
+horas; participação ano inicial/final/atividade +7; apresentação troca o titular por
+outro nome completo distinto da família; organização troca a instituição por outra
+instituição distinta (gerando sigla distinta do XML e trecho literal AD-014 coerente
+com a instituição do documento). Textos rasterizados suportam ASCII imprimível, acentos
+pt-BR (`NFC`/`NFD`), parênteses e quebras de linha, rejeitando caracteres fora do
+repertório suportado com `ValueError`. A vantagem do proposto sobre A/B nos testes com
+siglas configuradas verifica o software nesta bancada construída, sem demonstrar
+superioridade em dados independentes.
 
 Pendência S2 identificada pelos testes: `matcher/rules.py:essential_fields`
 exige `evento` também em `ORGANIZACAO_EVENTO`, onde o parser preserva ausência.

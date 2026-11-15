@@ -1,5 +1,17 @@
 # Comprova Lattes — TCC 2 (BSI / UFRA)
 
+## Ensaio da revisão humana — cinco casos piloto
+
+A interface local permite transcrever comprovantes e compará-los ao XML, salvar
+progresso e exportar JSON individual. Nomes sintéticos legíveis, comparação por campo,
+auxílioOCR opt-in e OCR noDockerCompose implementados. Este é um ensaio de usabilidade;
+a rodada oficial de150casos, aprovação do guia/templates e congelamento não ocorreram.
+
+**Para testar em outra máquina:** [passo a passo para Elivanilso](.specs/docs/human-annotation.md).
+Não precisa de banco ou Gemini para esse fluxo. Pacote público dos cinco casos deve
+ser compartilhado separadamente; respostas dos revisores não são publicadas.
+
+
 Sistema semiautomatizado para validação do Currículo Lattes por meio do cruzamento determinístico entre dados nativos em XML e entidades extraídas de documentos comprobatórios (PDF/Imagem) via LLM multimodal (Google Gemini).
 
 **Autores:** Caleb Cardoso Lima & Elivanilso Vidal Almeida Junior

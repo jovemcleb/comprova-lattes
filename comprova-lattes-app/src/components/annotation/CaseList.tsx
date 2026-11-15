@@ -1,5 +1,11 @@
 import type { AnnotationPackage } from '../../lib/annotation/package'
-import { caseStage, progressOf, type CaseStage, type ReviewDraft } from '../../lib/annotation/draft'
+import {
+  caseStage,
+  isCaseOcrAssisted,
+  progressOf,
+  type CaseStage,
+  type ReviewDraft,
+} from '../../lib/annotation/draft'
 
 const STAGE_LABEL: Record<CaseStage, string> = {
   not_started: 'Não iniciado',
@@ -23,6 +29,7 @@ export function CaseList({ pkg, draft, selectedId, onSelect }: CaseListProps) {
       <h2>Casos</h2>
       <p>
         <strong>{progress.complete}</strong> de {progress.total} concluídos · fase 1 salva em {progress.phase1Saved}
+        {progress.ocrAssistedCases > 0 && ` · OCR em ${progress.ocrAssistedCases}`}
       </p>
       <div className="annot-progress" role="progressbar" aria-label="Progresso de casos concluídos" aria-valuemin={0} aria-valuemax={progress.total} aria-valuenow={progress.complete}>
         <span style={{ width: `${percent}%` }} />
@@ -30,11 +37,16 @@ export function CaseList({ pkg, draft, selectedId, onSelect }: CaseListProps) {
       <nav aria-label="Lista de casos">
         <ol className="annot-cases">
           {pkg.cases.map(item => {
-            const stage = caseStage(draft.cases[item.case_id])
+            const annotation = draft.cases[item.case_id]
+            const stage = caseStage(annotation)
+            const usedOcr = isCaseOcrAssisted(annotation.ocr_assistance)
             return (
               <li key={item.case_id}>
                 <button type="button" aria-current={item.case_id === selectedId} onClick={() => onSelect(item.case_id)}>
-                  <span>{item.case_id}</span>
+                  <span>
+                    {item.case_id}
+                    {usedOcr ? ' (OCR)' : ''}
+                  </span>
                   <span className={stage === 'complete' ? 'badge success' : 'badge'}>{STAGE_LABEL[stage]}</span>
                 </button>
               </li>

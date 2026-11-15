@@ -1,5 +1,125 @@
 # Handoff — Comprova Lattes
 
+## Contexto para Elivanilso — publicação de 2026-11-15
+
+**Leia este resumo primeiro; seções datadas abaixo preservam histórico.**
+
+Verificação desta publicação: suíte backend completa **470 passed, 2 failed em69,60s**,
+Ruff global aprovado. Falhas listadas abaixo; nenhuma ocultada ou desativada.
+
+- Modelo escolhido: Gemini `gemini-3.5-flash-lite`, extrai entidades; motor
+  determinístico decide. Temperatura omitida em Gemini3+, sem promessa de zero efetivo.
+- Bancada inteiramente sintética:150cenários,50piloto(10famílias) e100finais
+  (20famílias),5casos/família.120documentos no total,30casos sem comprovante.
+- Gerador determinístico, emissores/IDs por partição, piloto invariável ao tamanho
+  final. Pillow produz PNG/PDF raster; Tesseract por + conversor PDF implementados.
+  Smoke local PNG/PDF funcionou, mas instalação local não é distribuída pelo GitHub.
+  Instruções em experiments/README.md; dependências opcionais experiments/ocr.
+- Relatórios de telemetria e métricas por categoria + coletor de artefatos/hashes
+  implementados. Documentação: .specs/docs/experiment-reporting.md e artifact-collection.md.
+- **Estado de desenvolvimento com falhas conhecidas:** após retirar pistas textuais
+  das mutações,2testes de vereditos esperam Divergente e recebem Inconclusivo.
+  Não mudar limiar/gabarito para esconder resultado. Publicação é compartilhamento
+  de trabalho em andamento, não versão experimental validada ou congelada.
+- Próximas tarefas autorizadas: distribuir sigla/evidência entre operadores,
+  substituir X inicial por variação legítima, diagnosticar os2testes, implementar
+  interface de anotação independente. Não rodar estudo oficial antes das correções.
+- Caleb e Elivanilso avaliarão os mesmos150casos separadamente, começando por5piloto.
+  Nos120com documento, transcrever campos sem sugestões; nos30sem,registrar ausência.
+  Associação,classe,motivo; salvar progresso e JSON individual. Preservar A/B antes
+  de Kappa e consenso, consenso em terceiro arquivo. Interface ainda não existe.
+- Estatística aprovada:3execuções separadas+média; IC95%,2.000reamostragens de
+  famílias inteiras incluindo todas repetições; McNemar exato complementar sobre
+  acerto integral da família,4comparações Levenshtein vs Exato/Normalizado/JW/Tokens
+  com Holm. Não tratar variantes como independentes;20famílias limitam inferência.
+- Guia humano: critérios objetivos primeiro, interpretação contextual justificada
+  quando necessário; sem evidência suficiente=Inconclusivo. Guia não deriva de
+  limiares do algoritmo. Estados ausente/ilegível distintos.
+- Ordem: ajustar no piloto -> congelar código/config/gerador/protocolo -> gerar e
+  hashear final -> anotações independentes+consenso -> avaliar sem tuning do final.
+  Nenhum resultado oficial, consenso humano ou congelamento foi produzido.
+- Monografia ainda precisa ser reconciliada com modelo, famílias, templates e
+  protocolo. Detalhes atuais em STATE.md e experimental-protocol/proposal.md.
+
+
+## Correção de pistas explícitas e bloqueio atual — 2026-11-15
+
+Delegação neutral-mutations concluída: nomes alternativos com mesmo prefixo e
+comprimento, sem OUTRA/DIVERGENTE, derivados deterministicamente sem usar scores.
+Coordenador executou tests/test_synthetic_leakage.py + test_certificate_templates.py
++ test_experiments.py: **28 passed, 2 failed (14,23s)**; Ruff global aprovado.
+Falhas em test_synthetic_categories_and_operator_verdicts[pilot/final]: mutação
+factual retorna INCONCLUSIVO em vez de DIVERGENTE com limiares fixos de teste.
+Não alterar gabarito nem calibrar contra final para mascarar falha; diagnóstico e
+tratamento metodológico pendentes. Gate469 anterior é histórico, não estado atual.
+Parecer humano recebido como proposta: revisão visual piloto, anotações A/B cegas
+independentes, hash pré-consenso, consenso separado e Kappa pré-consenso. Recomendação
+anotar150 e alternativa amostral ainda exigem decisão do usuário. Templates e
+protocolo humano não aprovados por agente. Sem freeze/estudo/API Gemini/publicação.
+
+
+## Integração das delegações — 2026-11-15
+
+Coletados OCR/metrics/artifacts/template-review. Ponte marcou OCR e metrics como
+failed por turno sem resposta final, apesar de código presente. Coordenador não
+assumiu conclusão: executou testes conjuntos (77 passed, 32,73 s), suíte completa
+backend fora do sandbox (469 passed, 43,96 s) e Ruff global aprovado. Tesseract
+5.4.0.20240606 executado, idioma por disponível, pypdfium2 5.15.2 e Pillow13 local.
+Smoke real de PNG e PDF raster de registro identity piloto, degradação0/DPI72,
+retornou statusOK, titular e40h; não comprova acurácia global nem avaliação oficial.
+Relatórios e coletor implementados; reporting.py acrescentado pelo coordenador ao
+inventário de código para hashes. Coleta definitiva deve ocorrer após integração.
+Sonnet solicitada para revisão, observed_model unknown na ponte: parecer reporta
+cinco imagens legitimate vistas e aponta valor INSTITUICAO DIVERGENTE SINTETICA,
+pistas estruturais exclusivas de legitimate e realismo limitado. Achados exigem
+revisão humana/desenho, não foram alterados implicitamente. Não usar documentos
+finais para ajustar regex/prompt. Estatística, anotação humana, aprovação dos templates
+e congelamento oficial seguem pendentes. Sem chamadas Gemini, commit ou push.
+
+
+## Integração Pillow e correções do gerador — 2026-11-15
+
+Retornos delegados recolhidos; integração verificada pelo coordenador: 45 testes
+em test_experiments.py + test_render_pillow.py aprovados (8,77 s), Ruff global
+aprovado. Pillow opcional instalado localmente (13.0.0), raster PNG/PDF com mesma
+matriz grayscale; metadados registram versão Pillow/FreeType. Inspeção visual de
+amostra local legível, mas formato ainda usa nomes técnicos de campos, sem alegação
+de realismo. Fonte embarcada com diacríticos compostos exige validar percepção/OCR.
+Piloto invariável ao tamanho final, ordem de campos estável nas omissões, sem
+render de no_document; legitimate usa evidência local nome/sigla sem tabela final.
+Não houve estudo oficial, chamada Gemini, instalação OCR ou mudança estatística.
+Pendentes: adaptador Tesseract real, métricas/telemetria agregadas, artefatos reais
+de congelamento e decisões sobre anotação, repetições e comparações estatísticas.
+Não reutilizar corpus antigo como nova bancada; registrar ambiente antes de congelar.
+
+
+## Parecer Argon recuperado — 2026-11-15
+
+Revisão somente leitura via local-agent-flow: run-key
+`tcc-150-synthetic-argon-review-20261115`, task `workbench-review`, attempt `att-01`,
+sessão `74e7770f-8fc2-44ff-b38c-18e95ca8d0cc`. Ponte retornou succeeded/ok e zero
+inferências durante espera; summary truncado. Texto integral recuperado do histórico
+local da sessão, em leitura somente, salvo em `.tmp-argon-review-20261115/report.md`
+(ignorado pelo Git). Modelo solicitado gemini-4-argon-high; observed_model unknown,
+embora UI fornecida pelo usuário identifique Argon high. Não houve nova chamada de
+modelo para recuperar o texto. Usuário autorizou chamadas adicionais se necessárias.
+
+Conferidos independentemente no código: grade 25/família, omissão apenas de titular,
+ausência dos operadores ampliados, calibração por Macro-F1 com primeiro empate,
+McNemar por família toda correta e Holm em todos os pares. Proposta preserva N=150:
+40 documentos piloto e 80 finais se preservados 10/20 casos sem comprovante;
+120+240 chamadas nominais com três repetições, sem contar retentativas.
+
+Sugestões ainda não aprovadas: redistribuir operadores sem aumentar N; usar blocos
+menores com identidades/templates distintos; avaliar trecho nome/sigla por evidência
+e não só igualdade literal; separar artefatos piloto/final e congelar parâmetros
+após piloto; definir anotação independente/Kappa e desempate antes da avaliação.
+Não aceitar automaticamente conclusões estatísticas do parecer: nomes/IDs novos não
+provam independência de templates; reportar limitação de poucos clusters; ressalva
+textual não torna válido McNemar de variantes dependentes. Gabarito de caso limítrofe
+não pode ser definido pelos limiares do motor calibrado. Não aplicado nenhum patch
+de implementação ou mudança estatística do worker.
+
 ## Modelo aprovado — 2026-11-15
 
 AD-015: usar `gemini-3.5-flash-lite`, após sondagem nos mesmos cinco comprovantes

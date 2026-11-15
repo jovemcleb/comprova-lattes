@@ -1,5 +1,179 @@
 # Project State & Open Decisions
 
+## Protocolo aprovado — 2026-11-15
+
+Usuário aprovou três execuções separadas + média das métricas; IC95% com2.000
+reamostragens por família preservando casos e repetições; semente explícita fixada
+antes de executar. Guia prioriza critérios objetivos e análise contextual justificada,
+sem evidência suficiente=Inconclusivo, sem copiar limiares do motor. Ordem aprovada:
+ajustes piloto -> congelar código/config/gerador/guia/protocolo -> gerar/hash final ->
+anotações humanas independentes e consenso -> avaliação final sem tuning posterior.
+Detalhes e limites na seção mais recente de experimental-protocol/proposal.md.
+Testes/final fixtures já vistos não tornam avaliação oficial cega retroativamente.
+Pendências de execução: interface de revisão ainda não implementada, distribuição
+aprovada das características dos certificados, diagnóstico de2testes falhando e
+reconciliação de código/docs às decisões. Não houve estudo oficial nem nova execução
+de testes nesta atualização documental.
+
+
+## McNemar complementar por família aprovado — 2026-11-15
+
+Usuário aprovou McNemar exato complementar sobre acerto integral dos cinco casos
+por família (20famílias finais), quatro comparações Levenshtein versus Exato,
+Normalizado,Jaro-Winkler e Tokens, com correção Holm. Métricas principais continuam
+sobre100casos e intervalos por família; teste não mede diferença de Macro-F1.
+Descrever perda de resolução (4/5 é família incompleta), baixa potência possível
+e necessidade de justificar independência entre famílias, sem supô-la automática.
+Não altera gabaritos/limiares nem aprova execução final. Tratamento dos IC e
+repetições deve ser reconciliado explicitamente antes do congelamento.
+
+
+## Anotação humana de campos aprovada — 2026-11-15
+
+Usuário aprovou incluir anotação independente de campos documentais na mesma
+revisão dos150cenários por Caleb e Elivanilso. Nos120cenários com documento,
+cada um transcreve titular,instituição/nome-sigla,evidência literal,título/atividade,
+evento,papel,carga horária e anos presentes no comprovante. Campos inicialmente
+em branco; estados presente/ausente/ilegível explícitos, sem converter ilegível
+em None silenciosamente. Não apresentar sugestões Gemini/gold/expected/pares alheios.
+Copiar valores do XML para preencher lacunas do documento não é permitido; UI deve
+separar fase documental da comparação XML para reduzir influência. Nos30cenários
+sem documento, registrar ausência e não exigir transcrição. Preservar anotações
+A/B originais e evidências; consenso separado. Decisão é escopo aprovado da futura
+interface, não implementação concluída nem revisão humana já executada.
+
+
+## Revisão humana integral aprovada — 2026-11-15
+
+Usuário escolheu revisão dos mesmos150cenários por Caleb e Elivanilso,
+independentemente (150avaliações por pessoa;300respostas individuais), em vez de
+amostras distintas por família. Consenso somente após preservar respostas originais
+e calcular concordância pré-consenso. Ensaio inicial com cinco casos piloto;
+se guia/ficha mudar, reavaliar esses casos antes da concordância oficial.
+Interface proposta: XML organizado e comprovante lado a lado, associação/classe/motivo,
+progresso salvo e exportação JSON separada por avaliador; consenso em terceiro arquivo.
+Interface ainda não implementada/verificada. Não mostrar expected/gold/resultado motor
+nem resposta do outro avaliador. Conferência do gabarito de campos de extração e
+escolhas estatísticas restantes não são aprovadas por consequência desta decisão.
+
+
+## Decisão sobre pistas remanescentes — 2026-11-15
+
+Usuário aprovou distribuir características dos certificados entre casos, incluindo
+presença de sigla/evidência, e substituir X inicial por variação legítima, mantendo
+150cenários. Implementação dessa ampliação ainda pendente. Não implica aprovação
+de anotação por agentes como substituição dos autores, nem escolha estatística.
+Usuário solicitou alternativas de anotação assistida e protocolo estatístico.
+
+
+## Correção de pistas explícitas e bloqueio atual — 2026-11-15
+
+Delegação neutral-mutations concluída: nomes alternativos com mesmo prefixo e
+comprimento, sem OUTRA/DIVERGENTE, derivados deterministicamente sem usar scores.
+Coordenador executou tests/test_synthetic_leakage.py + test_certificate_templates.py
++ test_experiments.py: **28 passed, 2 failed (14,23s)**; Ruff global aprovado.
+Falhas em test_synthetic_categories_and_operator_verdicts[pilot/final]: mutação
+factual retorna INCONCLUSIVO em vez de DIVERGENTE com limiares fixos de teste.
+Não alterar gabarito nem calibrar contra final para mascarar falha; diagnóstico e
+tratamento metodológico pendentes. Gate469 anterior é histórico, não estado atual.
+Parecer humano recebido como proposta: revisão visual piloto, anotações A/B cegas
+independentes, hash pré-consenso, consenso separado e Kappa pré-consenso. Recomendação
+anotar150 e alternativa amostral ainda exigem decisão do usuário. Templates e
+protocolo humano não aprovados por agente. Sem freeze/estudo/API Gemini/publicação.
+
+
+## Integração das delegações — 2026-11-15
+
+Coletados OCR/metrics/artifacts/template-review. Ponte marcou OCR e metrics como
+failed por turno sem resposta final, apesar de código presente. Coordenador não
+assumiu conclusão: executou testes conjuntos (77 passed, 32,73 s), suíte completa
+backend fora do sandbox (469 passed, 43,96 s) e Ruff global aprovado. Tesseract
+5.4.0.20240606 executado, idioma por disponível, pypdfium2 5.15.2 e Pillow13 local.
+Smoke real de PNG e PDF raster de registro identity piloto, degradação0/DPI72,
+retornou statusOK, titular e40h; não comprova acurácia global nem avaliação oficial.
+Relatórios e coletor implementados; reporting.py acrescentado pelo coordenador ao
+inventário de código para hashes. Coleta definitiva deve ocorrer após integração.
+Sonnet solicitada para revisão, observed_model unknown na ponte: parecer reporta
+cinco imagens legitimate vistas e aponta valor INSTITUICAO DIVERGENTE SINTETICA,
+pistas estruturais exclusivas de legitimate e realismo limitado. Achados exigem
+revisão humana/desenho, não foram alterados implicitamente. Não usar documentos
+finais para ajustar regex/prompt. Estatística, anotação humana, aprovação dos templates
+e congelamento oficial seguem pendentes. Sem chamadas Gemini, commit ou push.
+
+
+## Templates sintéticos em português (rascunho assistido) — 2026-11-15
+
+Implementados em `experiments/synthetic.py` os cabeçalhos/frases fixas neutras de
+apresentação para as cinco categorias (`FORMACAO_ACADEMICA`, `FORMACAO_COMPLEMENTAR`,
+`PARTICIPACAO_EVENTO`, `APRESENTACAO_TRABALHO` e `ORGANIZACAO_EVENTO`) e os rótulos
+em português do contrato (`Titular`, `Atividade`, `Evento`, `Papel`, `Instituição emissora`,
+`Sigla da instituição`, `Identificação da instituição`, `Ano de início`, `Ano de conclusão`,
+`Ano da atividade` e `Carga horária`), substituindo as chaves inglesas do schema no
+`document_text`. Assinatura `document_text(record, layout=0, category=None)` preserva
+compatibilidade de chamadas e recebe `category` no `generate`. Valores literais do
+registro (`gold`), ausência de campos `None`, `Decimal` numérico sem unidade em
+carga horária, trecho literal AD-014 (`Identificação da instituição`), ordenação
+relativa das chaves antes de omissões, independência do piloto, 150 cenários (50+100)
+e isolamento entre famílias permanecem inalterados. O template depende apenas de
+família/layout/categoria, sem imprimir status, operador ou chaves técnicas.
+
+**Proveniência e limites metodológicos:** a redação dos cabeçalhos e frases em
+português constitui rascunho de composição assistida por agente da mesma família de
+modelos (`Gemini`, `TEMPLATE_PROVENANCE`), exigindo validação e aprovação humana
+explícita antes do congelamento (`freeze`) e da execução dos experimentos oficiais.
+Não se afirma independência metodológica entre a preparação textual da bancada e o
+extrator avaliado, nem realismo gráfico documental. Atualizados `test_experiments.py`
+e criado `test_certificate_templates.py`; o teste `test_baseline_injected_and_failures`
+usa `document_text` real com layout/categoria e depende da adaptação concorrente de
+`experiments/baseline.py` para os rótulos em português. Nenhum corpus oficial foi
+gerado ou congelado; calibração, OCR real e estudos M3/M4/M5 continuam pendentes.
+
+
+## Integração Pillow e correções do gerador — 2026-11-15
+
+Retornos delegados recolhidos; integração verificada pelo coordenador: 45 testes
+em test_experiments.py + test_render_pillow.py aprovados (8,77 s), Ruff global
+aprovado. Pillow opcional instalado localmente (13.0.0), raster PNG/PDF com mesma
+matriz grayscale; metadados registram versão Pillow/FreeType. Inspeção visual de
+amostra local legível, mas formato ainda usa nomes técnicos de campos, sem alegação
+de realismo. Fonte embarcada com diacríticos compostos exige validar percepção/OCR.
+Piloto invariável ao tamanho final, ordem de campos estável nas omissões, sem
+render de no_document; legitimate usa evidência local nome/sigla sem tabela final.
+Não houve estudo oficial, chamada Gemini, instalação OCR ou mudança estatística.
+Pendentes: adaptador Tesseract real, métricas/telemetria agregadas, artefatos reais
+de congelamento e decisões sobre anotação, repetições e comparações estatísticas.
+Não reutilizar corpus antigo como nova bancada; registrar ambiente antes de congelar.
+
+
+## Reorganização aprovada e implementada — AD-016 (2026-11-15)
+
+150 cenários: **10 famílias piloto de cinco casos (50)** e **20 famílias finais
+ de cinco casos (100)**. Cada família mantém um registro-base/categoria e os cinco
+operadores existentes; categorias balanceadas separadamente por partição.
+Emissores exclusivos, ordem dos campos, margens e espaçamento variam deterministicamente.
+A mudança não comprova independência estatística. Não executar estudo oficial nem
+reutilizar corpus/manifestos antigos. Ampliação de operadores e revisão das métricas
+continuam pendentes; não foram implicitamente concluídas por esta reorganização.
+
+**Atualizar depois na monografia:** substituir 2/4 famílias de 25 por 10/20 de cinco;
+explicar definição da família, balanceamento por categoria e diversidade de layouts;
+atualizar quadro de composição e figuras; revisar unidade de reamostragem e limitações.
+Continuam 40 documentos piloto e 80 finais; três repetições seriam 120 + 240 chamadas,
+sem contar retries, reaproveitando extrações na etapa integrada. Sem resultados novos.
+
+
+## Bancada aprovada — AD-016 (2026-11-15)
+
+Usuário confirmou **150 cenários inteiramente sintéticos: 50 piloto + 100 finais**.
+Não derivar XMLs ou documentos da edição de currículos pessoais. Esta decisão
+substitui a proposta histórica de 30/~90 nos documentos do projeto. Piloto serve
+para calibração e ajustes; final para avaliação com parâmetros congelados.
+O gerador atual contém cinco casos por família (10 piloto + 20 finais).
+Ampliação dos operadores e adequação estatística ainda precisam de revisão, sem
+aumentar N implicitamente. Não tratar 100 variantes como 100 unidades independentes.
+Argon será consultado somente para revisão de estrutura/cobertura, sem gerar
+conteúdo documental ou gabaritos. Geração deve permanecer determinística e fictícia.
+
 ## Modelo escolhido — AD-015 (2026-11-15)
 
 Usuário aprovou `gemini-3.5-flash-lite` após a sondagem comparativa. Atualizados

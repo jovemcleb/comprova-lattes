@@ -9,6 +9,15 @@ from comprova_lattes.matcher.models import ExtractedDocumentRecord, MatcherConfi
 from comprova_lattes.matcher.text import normalize_text
 
 from .baseline import FIELDS
+from .reporting import (
+    classification_by_category,
+    experiment1_by_category,
+    experiment3_by_category,
+    extraction_by_category,
+    sanitize_json_value,
+    summarize_experiment1_telemetry,
+    summarize_experiment3_telemetry,
+)
 from .statistics import classification, cluster_bootstrap, paired_comparisons
 from .synthetic import Case
 
@@ -23,7 +32,7 @@ def _equal(a, b, equivalent):
     return a == b
 
 
-def extraction_metrics(
+def _extraction_metrics_core(
     cases: Sequence[Case], outputs: dict[str, ExtractedDocumentRecord], *, equivalent: bool = False
 ) -> dict:
     documents = [c for c in cases if c.gold is not None]
@@ -86,6 +95,23 @@ def extraction_metrics(
     }
 
 
+def extraction_metrics(
+    cases: Sequence[Case], outputs: dict[str, ExtractedDocumentRecord], *, equivalent: bool = False
+) -> dict:
+    result = _extraction_metrics_core(cases, outputs, equivalent=equivalent)
+    result["by_category"] = (
+        extraction_by_category(
+            cases,
+            outputs,
+            equivalent=equivalent,
+            metric_fn=_extraction_metrics_core,
+        )
+        if cases
+        else {}
+    )
+    return result
+
+
 def experiment1(cases: Sequence[Case], extractor: Extractor, baseline: Extractor) -> dict:
     documents = [c for c in cases if c.document is not None]
     runs = [
@@ -102,6 +128,8 @@ def experiment1(cases: Sequence[Case], extractor: Extractor, baseline: Extractor
         for c in documents
     }
     literal = [extraction_metrics(cases, r) for r in runs]
+    equivalent = [extraction_metrics(cases, r, equivalent=True) for r in runs]
+    baseline_report = extraction_metrics(cases, ocr)
     accuracies = [r["all_fields_accuracy"] for r in literal]
     return {
         "n": len(documents),
@@ -109,8 +137,17 @@ def experiment1(cases: Sequence[Case], extractor: Extractor, baseline: Extractor
         "outputs": runs,
         "baseline_outputs": ocr,
         "literal": literal,
-        "equivalent": [extraction_metrics(cases, r, equivalent=True) for r in runs],
-        "baseline": extraction_metrics(cases, ocr),
+        "equivalent": equivalent,
+        "baseline": baseline_report,
+        "by_category": experiment1_by_category(
+            cases,
+            runs,
+            ocr,
+            literal_reports=literal,
+            equivalent_reports=equivalent,
+            baseline_report=baseline_report,
+        ),
+        "telemetry": summarize_experiment1_telemetry(cases, runs, ocr),
         "unstable_fields": unstable,
         "unstable_documents": sum(bool(v) for v in unstable.values()),
         "stability_by_field": {
@@ -169,6 +206,7 @@ def evaluate(
             {
                 "case_id": c.case_id,
                 "family_id": c.family_id,
+                "category": c.curriculum.records[0].category.value,
                 "status": str(v.status),
                 "expected": str(c.expected),
                 "correct": ok,
@@ -202,6 +240,7 @@ def evaluate(
         )
         if any(c.gold for c in cases)
         else None,
+        by_category=classification_by_category(cases, rows, orphans=orphans),
     )
 
 
@@ -227,14 +266,19 @@ def experiment3(
         raise ValueError("Exp 3 reutiliza exatamente as 3 extrações de Exp 1")
     oracle = evaluate(cases, {c.case_id: c.gold for c in cases if c.gold}, config)
     reference = {r["case_id"]: r for r in oracle["rows"]}
+    run_reports = [evaluate(cases, run, config, oracle=reference) for run in outputs]
     return {
         "n": len(cases),
-        "runs": [evaluate(cases, run, config, oracle=reference) for run in outputs],
+        "runs": run_reports,
         "oracle": oracle,
         "calls": 0,
+        "reused": True,
         "extraction_metadata": [
-            {key: value.raw_metadata for key, value in run.items()} for run in outputs
+            {key: sanitize_json_value(value.raw_metadata) for key, value in run.items()}
+            for run in outputs
         ],
+        "telemetry": summarize_experiment3_telemetry(cases, outputs),
+        "by_category": experiment3_by_category({"runs": run_reports, "oracle": oracle}),
         "repetition_policy": "separate; N unchanged",
     }
 

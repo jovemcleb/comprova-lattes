@@ -27,8 +27,10 @@ from comprova_lattes.experiments.statistics import (
     mcnemar_exact,
 )
 from comprova_lattes.experiments.synthetic import (
+    FIELD_LABELS,
     SYNTHETIC_ACRONYMS,
     Corpus,
+    alternative_identity,
     document_text,
     generate,
     synthetic_acronyms,
@@ -38,14 +40,14 @@ from comprova_lattes.matcher.models import ExtractedDocumentRecord, MatcherConfi
 
 @pytest.fixture(scope="module")
 def corpus():
-    return generate(seed=93, pilot_families=1, final_families=1)
+    return generate(seed=93, pilot_families=5, final_families=5)
 
 
 @pytest.fixture
 def config(corpus):
     # Valores exclusivos do teste; não são limiares científicos calibrados.
     return MatcherConfig(
-        acronym_table=synthetic_acronyms(corpus.cases),
+        acronym_table=synthetic_acronyms(corpus.select("pilot")),
         acronym_table_version="synthetic-test-only",
         thresholds=MatcherThresholds(
             association=0.3,
@@ -61,10 +63,12 @@ def config(corpus):
 
 
 def test_deterministic_partition_and_categories(corpus):
-    assert corpus == generate(seed=93, pilot_families=1, final_families=1)
+    assert corpus == generate(seed=93, pilot_families=5, final_families=5)
     pilot, final = corpus.select("pilot"), corpus.select("final")
+    assert pilot == generate(seed=93, pilot_families=5, final_families=20).select("pilot")
     assert len(corpus.cases) == 50
     assert len({c.curriculum.records[0].category for c in pilot}) == 5
+    assert len(generate(seed=7, pilot_families=1, final_families=2).cases) == 15
     for attr in ("family_id", "template_id", "issuer_id"):
         assert not {getattr(c, attr) for c in pilot} & {getattr(c, attr) for c in final}
     assert len({c.case_id for c in corpus.cases}) == 50
@@ -115,13 +119,17 @@ def test_baseline_injected_and_failures(corpus):
 
     def ocr(data, mime):
         observed.append((data, mime))
-        return document_text(c.gold)
+        return document_text(
+            c.gold, int(c.family_id, 16), category=c.curriculum.records[0].category
+        )
 
     assert OCRRegex(ocr).extract(c.case_id, c.document, c.mime_type) == c.gold
     assert observed == [(c.document, c.mime_type)]
     assert OCRRegex(lambda *_: "").extract("x", b"x", "image/png").extraction_status == "UNREADABLE"
     assert (
-        OCRRegex(lambda *_: "workload_hours: bad").extract("x", b"x", "image/png").extraction_status
+        OCRRegex(lambda *_: "Carga horária: bad\nworkload_hours: bad")
+        .extract("x", b"x", "image/png")
+        .extraction_status
         == "INVALID_JSON"
     )
 
@@ -174,14 +182,15 @@ def test_runners_and_propagation(corpus, config):
     assert result["association"]["fn"] == len(gold)
     assert result["error_causes"].get("association", 0)
     stats = inference(reports, cases, seed=8, replicates=10, confidence=0.95)
-    assert stats["intervals"]["A"]["families"] == 1
-    assert stats["mcnemar"]["A:B"]["n"] == 1
+    assert stats["intervals"]["A"]["families"] == 5
+    assert stats["mcnemar"]["A:B"]["n"] == 5
 
 
 @pytest.mark.parametrize("partition", ["pilot", "final"])
 def test_synthetic_categories_and_operator_verdicts(corpus, config, partition):
-    from comprova_lattes.experiments.render import _GLYPHS
+    import comprova_lattes.experiments.render as render_module
 
+    glyphs = getattr(render_module, "_GLYPHS", None)
     cases = corpus.select(partition)
     assert len(cases) == 25
     reports = experiment2(cases, config)
@@ -197,22 +206,39 @@ def test_synthetic_categories_and_operator_verdicts(corpus, config, partition):
         elif record.category in ("PARTICIPACAO_EVENTO", "APRESENTACAO_TRABALHO"):
             assert record.event_name
         if case.gold:
-            assert set(document_text(case.gold).upper()) <= set(_GLYPHS) | {" ", "\n"}
+            text = document_text(
+                case.gold, int(case.family_id, 16), category=record.category
+            )
+            assert all(ch.isprintable() or ch == "\n" for ch in text)
+            if glyphs is not None:
+                assert set(text.upper()) <= set(glyphs) | {" ", "\n"}
         if case.operator in ("identity", "legitimate"):
             assert row["status"] == "VALIDADO", (record.category, case.operator, row)
             if record.category == "APRESENTACAO_TRABALHO":
                 assert case.gold.participation_role_raw == "APRESENTADOR"
+            if case.operator == "legitimate":
+                inst = next(
+                    f
+                    for f in row["automatic"]["field_evidences"]
+                    if f["field_name"] == "instituicao"
+                )
+                assert inst["rule_applied"] == "DOCUMENT_ACRONYM_EQUIVALENCE"
+                assert inst["document_evidence"] == case.gold.issuer_name_acronym_evidence
         elif case.operator == "factual_mutation":
             assert row["status"] == "DIVERGENTE"
             assert row["association_correct"]
         else:
             assert row["status"] == "INCONCLUSIVO"
     assert proposed["macro_f1"] == 1
+    if partition == "final":
+        empty_table = config.model_copy(update={"acronym_table": {}})
+        assert experiment2(cases, empty_table)["LEVENSHTEIN_NORM"]["macro_f1"] == 1
 
 
 def test_synthetic_xml_structure_and_raster_alphabet(corpus):
-    from comprova_lattes.experiments.render import _GLYPHS
+    import comprova_lattes.experiments.render as render_module
 
+    glyphs = getattr(render_module, "_GLYPHS", None)
     for case in corpus.cases:
         record = case.curriculum.records[0]
         assert record.title and record.institution and record.end_year == 2024
@@ -225,31 +251,106 @@ def test_synthetic_xml_structure_and_raster_alphabet(corpus):
         if record.category == "ORGANIZACAO_EVENTO":
             assert record.event_name is None
         if case.gold:
-            assert set(document_text(case.gold).upper()) <= set(_GLYPHS) | {" ", "\n"}
+            text = document_text(
+                case.gold, int(case.family_id, 16), category=record.category
+            )
+            assert all(ch.isprintable() or ch == "\n" for ch in text)
+            if glyphs is not None:
+                assert set(text.upper()) <= set(glyphs) | {" ", "\n"}
 
 
 def test_legitimate_variation_and_factual_mutations(corpus, config):
+    from comprova_lattes.matcher.rules import compare_institution
+
     assert SYNTHETIC_ACRONYMS == {"IF": "INSTITUTO FICTICIO"}
-    fields = {
+    assert config.acronym_table == synthetic_acronyms(corpus.select("pilot"))
+    assert not (set(config.acronym_table) & set(synthetic_acronyms(corpus.select("final"))))
+    empty_config = config.model_copy(update={"acronym_table": {}})
+    scalar_mutations = {
         "FORMACAO_ACADEMICA": ("workload_hours", 45),
         "FORMACAO_COMPLEMENTAR": ("workload_hours", 400),
         "PARTICIPACAO_EVENTO": ("activity_year", 2031),
-        "APRESENTACAO_TRABALHO": ("holder_name", "OUTRA PESSOA SINTETICA"),
-        "ORGANIZACAO_EVENTO": ("issuer_institution", "INSTITUICAO DIVERGENTE SINTETICA"),
+    }
+    identity_by_family = {
+        c.family_id: c for c in corpus.cases if c.operator == "identity"
     }
     for case in corpus.cases:
         record = case.curriculum.records[0]
         if case.operator == "legitimate":
-            assert config.acronym_table[case.gold.issuer_institution] == record.institution
+            expected_acronym = f"IF{case.issuer_id.upper()}"
+            assert case.gold.issuer_institution == record.institution
+            assert case.gold.issuer_acronym == expected_acronym
+            assert (
+                case.gold.issuer_name_acronym_evidence
+                == f"{record.institution} - {expected_acronym}"
+            )
+            assert synthetic_acronyms((case,))[expected_acronym] == record.institution
+            local_rel = compare_institution(
+                record.model_copy(update={"institution": expected_acronym}),
+                case.gold,
+                empty_config,
+            )
+            assert local_rel.outcome == "MATCH"
+            assert local_rel.rule_applied == "DOCUMENT_ACRONYM_EQUIVALENCE"
+            assert local_rel.document_evidence == case.gold.issuer_name_acronym_evidence
+            acronym_only_doc = case.gold.model_copy(
+                update={
+                    "issuer_institution": expected_acronym,
+                    "issuer_acronym": None,
+                    "issuer_name_acronym_evidence": None,
+                }
+            )
+            if case.partition == "pilot":
+                assert (
+                    compare_institution(record, acronym_only_doc, config).rule_applied
+                    == "ACRONYM_EQUIVALENCE"
+                )
+            else:
+                assert compare_institution(record, acronym_only_doc, config).outcome != "MATCH"
+                with_table = config.model_copy(
+                    update={"acronym_table": synthetic_acronyms((case,))}
+                )
+                assert (
+                    compare_institution(record, acronym_only_doc, with_table).rule_applied
+                    == "ACRONYM_EQUIVALENCE"
+                )
             assert len(record.title) >= 25
             assert sum(a != b for a, b in zip(record.title, case.gold.activity_title)) == 1
         elif case.operator == "factual_mutation":
-            field, value = fields[record.category]
-            assert getattr(case.gold, field) == value
-            if field == "workload_hours":
-                assert record.workload_hours == 40
-            elif field == "activity_year":
-                assert case.gold.start_year == case.gold.end_year == 2031
+            baseline_gold = identity_by_family[case.family_id].gold
+            if record.category in scalar_mutations:
+                field, value = scalar_mutations[record.category]
+                assert getattr(case.gold, field) == value
+                if field == "workload_hours":
+                    assert record.workload_hours == 40
+                elif field == "activity_year":
+                    assert case.gold.start_year == case.gold.end_year == 2031
+            elif record.category == "APRESENTACAO_TRABALHO":
+                expected_holder = (
+                    f"PESSOA FICTICIA {alternative_identity(corpus.seed, case.family_id, 'holder_name')}"
+                )
+                assert case.gold.holder_name == expected_holder
+                assert case.gold.holder_name != case.curriculum.full_name
+                assert case.gold.holder_name.startswith("PESSOA FICTICIA ")
+                assert len(case.gold.holder_name) == len(case.curriculum.full_name)
+                assert case.gold.model_copy(
+                    update={"document_id": baseline_gold.document_id, "holder_name": baseline_gold.holder_name}
+                ) == baseline_gold
+            elif record.category == "ORGANIZACAO_EVENTO":
+                expected_inst = (
+                    "INSTITUTO FICTICIO "
+                    f"{alternative_identity(corpus.seed, case.family_id, 'issuer_institution')}"
+                )
+                assert case.gold.issuer_institution == expected_inst
+                assert case.gold.issuer_institution != record.institution
+                assert case.gold.issuer_institution.startswith("INSTITUTO FICTICIO ")
+                assert len(case.gold.issuer_institution) == len(record.institution)
+                assert case.gold.model_copy(
+                    update={
+                        "document_id": baseline_gold.document_id,
+                        "issuer_institution": baseline_gold.issuer_institution,
+                    }
+                ) == baseline_gold
 
 
 def test_statistics_known_values():
@@ -409,3 +510,86 @@ def test_cli_roundtrip_all_experiments(tmp_path, corpus, config):
             extra += ["--baseline", str(path("ocr.json"))]
         main([command, *common, *extra])
         assert read(path("report.json"))["partition"] == "final"
+
+
+def test_approved_workbench_size_and_family_structure():
+    from collections import Counter
+
+    corpus = generate(seed=42, pilot_families=10, final_families=20)
+    assert corpus == generate(seed=42, pilot_families=10, final_families=20)
+    assert corpus.select("pilot") == generate(seed=42, pilot_families=10, final_families=5).select(
+        "pilot"
+    )
+    for partition, n_families in (("pilot", 10), ("final", 20)):
+        cases = corpus.select(partition)
+        families = {c.family_id for c in cases}
+        assert len(cases) == n_families * 5
+        assert len(families) == n_families
+        assert set(Counter(c.curriculum.records[0].category for c in cases).values()) == {
+            n_families
+        }
+        assert set(Counter(c.operator for c in cases).values()) == {n_families}
+        assert sum(c.document is not None for c in cases) == n_families * 4
+        assert sum(c.gold is not None for c in cases) == n_families * 4
+        for family in families:
+            members = [c for c in cases if c.family_id == family]
+            assert len(members) == 5
+            assert len({c.xml for c in members}) == 1
+            assert len({c.template_id for c in members}) == 1
+            assert {c.operator for c in members} == {
+                "identity", "legitimate", "factual_mutation", "omission", "no_document"
+            }
+    layouts = [
+        [
+            line
+            for line in document_text(
+                c.gold, int(c.family_id, 16), category=c.curriculum.records[0].category
+            ).splitlines()
+            if ":" in line
+        ]
+        for c in corpus.cases
+        if c.operator == "identity"
+    ]
+    orders = {tuple(line.split(":", 1)[0] for line in lines) for lines in layouts}
+    assert len(orders) > 2
+
+
+def test_template_relative_key_order_and_skip_no_document_render(monkeypatch, corpus):
+    import comprova_lattes.experiments.synthetic as synthetic_module
+
+    def field_keys(record, layout, category=None):
+        return [
+            line.split(":", 1)[0]
+            for line in document_text(record, layout, category=category).splitlines()
+            if ":" in line
+        ]
+
+    for family_id in {c.family_id for c in corpus.cases}:
+        by_op = {c.operator: c for c in corpus.cases if c.family_id == family_id}
+        category = by_op["identity"].curriculum.records[0].category
+        for layout in (0, 1, int(family_id, 16)):
+            identity_keys = field_keys(by_op["identity"].gold, layout, category)
+            omission_keys = field_keys(by_op["omission"].gold, layout, category)
+            legitimate_keys = field_keys(by_op["legitimate"].gold, layout, category)
+            assert omission_keys == [
+                k for k in identity_keys if k != FIELD_LABELS["holder_name"]
+            ]
+            assert [k for k in legitimate_keys if k in set(identity_keys)] == identity_keys
+
+    raster_calls = 0
+    original_raster = synthetic_module.raster
+
+    def counted_raster(*args, **kwargs):
+        nonlocal raster_calls
+        raster_calls += 1
+        return original_raster(*args, **kwargs)
+
+    monkeypatch.setattr(synthetic_module, "raster", counted_raster)
+    sample = generate(seed=19, pilot_families=2, final_families=3)
+    assert len(sample.cases) == 25
+    assert raster_calls == 20
+    assert all(
+        c.gold is None and c.document is None
+        for c in sample.cases
+        if c.operator == "no_document"
+    )

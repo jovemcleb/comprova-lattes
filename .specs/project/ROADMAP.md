@@ -1,5 +1,36 @@
 # Roadmap — Comprova Lattes (TCC 2)
 
+## Reorganização aprovada e implementada — AD-016 (2026-11-15)
+
+150 cenários: **10 famílias piloto de cinco casos (50)** e **20 famílias finais
+ de cinco casos (100)**. Cada família mantém um registro-base/categoria e os cinco
+operadores existentes; categorias balanceadas separadamente por partição.
+Emissores exclusivos, ordem dos campos, margens e espaçamento variam deterministicamente.
+A mudança não comprova independência estatística. Não executar estudo oficial nem
+reutilizar corpus/manifestos antigos. Ampliação de operadores e revisão das métricas
+continuam pendentes; não foram implicitamente concluídas por esta reorganização.
+
+**Atualizar depois na monografia:** substituir 2/4 famílias de 25 por 10/20 de cinco;
+explicar definição da família, balanceamento por categoria e diversidade de layouts;
+atualizar quadro de composição e figuras; revisar unidade de reamostragem e limitações.
+Continuam 40 documentos piloto e 80 finais; três repetições seriam 120 + 240 chamadas,
+sem contar retries, reaproveitando extrações na etapa integrada. Sem resultados novos.
+
+
+**AD-016 (2026-11-15):** aprovado 50 piloto + 100 finais, todos sintéticos;
+substitui propostas de 30/~90 abaixo. Ampliação da bancada e protocolo ainda pendentes.
+
+**Atualização 2026-11-15 (Templates pt-BR em rascunho):** `experiments/synthetic.py`
+passa a emitir cabeçalhos e frases neutras fixas por categoria (cinco categorias) e
+rótulos em português do contrato (`Titular`, `Atividade`, `Evento`, `Papel`,
+`Instituição emissora`, `Sigla da instituição`, `Identificação da instituição`,
+`Ano de início`, `Ano de conclusão`, `Ano da atividade`, `Carga horária`), sem criar
+fatos nem alterar valores `gold` ou o trecho literal AD-014. A composição textual foi
+assistida por agente da família Gemini (`TEMPLATE_PROVENANCE`) e permanece como
+rascunho dependente de aprovação humana antes do congelamento (`freeze`), sem alegar
+independência metodológica frente ao extrator. Integração com `baseline.py` (OCR+RegEx)
+em adaptação concorrente; estudos oficiais M3/M4/M5 continuam pendentes.
+
 **Atualização 2026-11-15:** AD-014 (equivalência institucional documental) e AD-015
 (`gemini-3.5-flash-lite`) implementadas. Gate atual: 412 testes, Ruff e configuração
 Compose aprovados. Primeira sondagem de extração real concluída; não equivale à

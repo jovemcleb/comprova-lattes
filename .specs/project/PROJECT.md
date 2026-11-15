@@ -1,10 +1,31 @@
 # Comprova Lattes (TCC 2 - UFRA)
 
+## Reorganização aprovada e implementada — AD-016 (2026-11-15)
+
+150 cenários: **10 famílias piloto de cinco casos (50)** e **20 famílias finais
+ de cinco casos (100)**. Cada família mantém um registro-base/categoria e os cinco
+operadores existentes; categorias balanceadas separadamente por partição.
+Emissores exclusivos, ordem dos campos, margens e espaçamento variam deterministicamente.
+A mudança não comprova independência estatística. Não executar estudo oficial nem
+reutilizar corpus/manifestos antigos. Ampliação de operadores e revisão das métricas
+continuam pendentes; não foram implicitamente concluídas por esta reorganização.
+
+**Atualizar depois na monografia:** substituir 2/4 famílias de 25 por 10/20 de cinco;
+explicar definição da família, balanceamento por categoria e diversidade de layouts;
+atualizar quadro de composição e figuras; revisar unidade de reamostragem e limitações.
+Continuam 40 documentos piloto e 80 finais; três repetições seriam 120 + 240 chamadas,
+sem contar retries, reaproveitando extrações na etapa integrada. Sem resultados novos.
+
+
 **Vision:** Protótipo cientificamente avaliável de validação semiautomatizada do Currículo Lattes, cruzando dados nativos em XML com informações extraídas de documentos comprobatórios via LLM multimodal.
 **For:** Comissões avaliadoras, pesquisadores e banca examinadora do TCC 2 (Sistemas de Informação - UFRA).
 **Solves:** Reduz a conferência manual de documentos heterogêneos mantendo rastreabilidade por campo e separando estritamente a extração (LLM) da decisão algorítmica.
 
 ## Goals
+
+Atualização AD-016 (2026-11-15): aprovado total de **150 cenários sintéticos,
+50 piloto + 100 finais**, substituindo os tamanhos propostos historicamente abaixo.
+Distribuição por operadores/famílias deve ser reconciliada antes de gerar o estudo.
 
 - **G1 (P0):** Extrair deterministicamente registros das 5 categorias-alvo do XML Lattes — as 3 seções iniciais (`Formação Acadêmica/Titulação`, `Formação Complementar` e `Participação em Eventos`) mais `Apresentação de Trabalho` (`APRESENTACAO_TRABALHO`) e `Organização de Evento` (`ORGANIZACAO_EVENTO`) em `PRODUCAO-TECNICA/DEMAIS-TIPOS-DE-PRODUCAO-TECNICA` (`AD-012`) — com segurança (`defusedxml`), mantendo título, evento e papel separados (`AD-010`) e usando o XSD oficial do Extrator CNPq como referência estrutural principal e a DTD comunitária como comparação histórica (`AD-011`, sem presumir equivalência com a exportação da interface web nem encerrar o requisito de validação DTD do orientador).
 - **G2 (P0):** Extrair entidades de PDFs e imagens via `google-genai` (Gemini) em JSON validado por JSON Schema e Pydantic v2, mantendo nome do evento, título específico e papel de participação separados e extraídos apenas quando explícitos (`AD-010`).

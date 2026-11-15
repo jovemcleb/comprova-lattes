@@ -1,5 +1,91 @@
 # Proposta — Protocolo experimental reprodutível (TCC 2)
 
+## Protocolo aprovado — repetições, anotação e congelamento (2026-11-15)
+
+Esta decisão substitui opções históricas conflitantes abaixo; não comprova
+implementação, resultados ou aprovação humana já realizada.
+
+### Repetições e intervalos
+
+- Três execuções do Gemini por documento, relatadas separadamente e acompanhadas
+  da média das métricas. Não combinar por voto nem somar repetições como novas
+  unidades amostrais. Etapa integrada reutiliza as mesmas extrações.
+- IC de 95% com 2.000 reamostragens de famílias inteiras. Em cada reamostragem,
+  preservar todos os casos e as três execuções da família; recalcular a estatística
+  de interesse. Para média das três execuções, recalcular a média das métricas na
+  réplica, sem misturar suas matrizes como se fossem casos independentes.
+- Semente deve constar explicitamente da configuração e do manifesto antes de
+  executar. Não escolher semente ou método de intervalo após ver resultados.
+- McNemar exato complementar por acerto integral da família, nas quatro comparações
+  já aprovadas, com Holm. Não testa diretamente diferenças de Macro-F1; registrar
+  perda de resolução e pressuposto de independência entre famílias.
+- Com20famílias finais, reconhecer limites de incerteza e generalização. Regra
+  técnica de percentis/estratificação deve ser reconciliada no código antes de selar,
+  sem alterar silenciosamente o estimando ou o desenho aprovado.
+
+### Guia humano
+
+Priorizar critérios objetivos: presença, valores, datas e equivalências explicitadas
+no guia, independente dos limiares do motor. Casos ambíguos recebem análise contextual
+justificada com trecho documental. Sem evidência suficiente, resultado Inconclusivo.
+Ausente e ilegível são estados distintos de anotação; não converter automaticamente
+um no outro. Cada autor anota campos, associação e classe separadamente, sem respostas
+Gemini, expected/gold do gerador ou parecer do outro. Preservar A/B pré-consenso,
+calcular concordância antes de discutir e registrar consenso em terceiro arquivo.
+Discordância sem resolução permanece documentada, não forçar rótulo; procedimento
+específico de adjudicação será descrito no guia operacional antes das anotações.
+
+### Ordem de congelamento
+
+1. Piloto: ajustar certificados, guia, prompt, regex e limiares. Ensaiar interface
+   com cinco casos piloto; se guia/ficha mudar, reavaliar antes da concordância oficial.
+2. Aprovar e congelar código, gerador/templates, configurações, modelo/prompt,
+   versões, sementes e protocolo. Coletor de hashes não é por si aprovação humana.
+3. Gerar conjunto final pelo gerador congelado e registrar hashes. Final distinto
+   dos artefatos de teste já inspecionados; registrar a exposição anterior desses
+   fixtures como limitação, sem alegar cegamento retroativo nem independência garantida.
+4. Anotar o final sem consultar resultados do sistema. Preservar respostas e fechar
+   consenso/gabarito antes de executar/consultar a avaliação automática final.
+5. Avaliar e relatar, sem ajustar algoritmo ou gabarito para melhorar resultados.
+
+Se um defeito exigir mudança depois de abrir o final, registrar ocorrência, invalidar
+ou qualificar a rodada afetada e definir nova avaliação; não apresentá-la como intocada.
+Nenhum conjunto final oficial foi congelado ou aprovado nesta decisão.
+
+
+## McNemar complementar por família aprovado — 2026-11-15
+
+Usuário aprovou McNemar exato complementar sobre acerto integral dos cinco casos
+por família (20famílias finais), quatro comparações Levenshtein versus Exato,
+Normalizado,Jaro-Winkler e Tokens, com correção Holm. Métricas principais continuam
+sobre100casos e intervalos por família; teste não mede diferença de Macro-F1.
+Descrever perda de resolução (4/5 é família incompleta), baixa potência possível
+e necessidade de justificar independência entre famílias, sem supô-la automática.
+Não altera gabaritos/limiares nem aprova execução final. Repetições e IC seguem a decisão mais recente no início deste documento;
+implementação deve ser reconciliada antes do congelamento.
+
+
+## Reorganização aprovada e implementada — AD-016 (2026-11-15)
+
+150 cenários: **10 famílias piloto de cinco casos (50)** e **20 famílias finais
+ de cinco casos (100)**. Cada família mantém um registro-base/categoria e os cinco
+operadores existentes; categorias balanceadas separadamente por partição.
+Emissores exclusivos, ordem dos campos, margens e espaçamento variam deterministicamente.
+A mudança não comprova independência estatística. Não executar estudo oficial nem
+reutilizar corpus/manifestos antigos. Ampliação de operadores e revisão das métricas
+continuam pendentes; não foram implicitamente concluídas por esta reorganização.
+
+**Atualizar depois na monografia:** substituir 2/4 famílias de 25 por 10/20 de cinco;
+explicar definição da família, balanceamento por categoria e diversidade de layouts;
+atualizar quadro de composição e figuras; revisar unidade de reamostragem e limitações.
+Continuam 40 documentos piloto e 80 finais; três repetições seriam 120 + 240 chamadas,
+sem contar retries, reaproveitando extrações na etapa integrada. Sem resultados novos.
+
+
+**Decisão posterior AD-016 (2026-11-15):** aprovado total de 150 cenários sintéticos
+(50 piloto e 100 finais). Substitui a proposta de tamanho 30/~90 neste histórico;
+as demais opções estatísticas e de distribuição não são aprovadas por consequência.
+
 **Status:** PROPOSTA para decisão (2026-11-13). Nada aqui está aprovado, implementado ou medido. Não há resultado, custo, modelo exato ou limiar neste documento; números como 30, ~90 e 3 repetições são os já planejados em [ROADMAP](../../project/ROADMAP.md) e [STATE](../../project/STATE.md), reproduzidos como proposta e não como regra.
 
 **Escopo:** bancada sintética, Experimentos 1–3, gabarito, métricas, estatística, artefatos e riscos de vazamento.

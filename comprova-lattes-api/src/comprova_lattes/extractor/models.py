@@ -21,6 +21,11 @@ class ExtractionPayload(BaseModel):
     participation_role_raw: OptionalCleanStr = None
     issuer_institution: OptionalCleanStr = None
     issuer_acronym: OptionalCleanStr = None
+    issuer_name_acronym_evidence: OptionalCleanStr = Field(
+        default=None,
+        description="Trecho literal que relaciona explicitamente nome e sigla do emissor; "
+        "null se a relação não estiver explícita. Não inferir por conhecimento externo.",
+    )
     start_year: StrictXmlInt | None = None
     end_year: StrictXmlInt | None = None
     activity_year: StrictXmlInt | None = None

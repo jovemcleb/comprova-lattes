@@ -1,5 +1,25 @@
 # Handoff — Comprova Lattes
 
+## Modelo aprovado — 2026-11-15
+
+AD-015: usar `gemini-3.5-flash-lite`, após sondagem nos mesmos cinco comprovantes
+do piloto (5/5 extrações, 37/37 campos presentes; limites no relatório em docs/).
+Padrão/backend e .env local atualizados; sem migração para Interactions. Gemini 3+
+usa parâmetros de amostragem do provedor, não temperatura zero. Atualização da
+monografia V8 e ampliação da bancada continuam pendentes. Histórico abaixo preservado.
+
+## Atualização — 2026-11-15
+
+AD-014 implementada: relação nome/sigla explícita por documento com trecho literal,
+prompt `entities-v2`, dicionário fixo de apoio, sem atualização global. Decisões da
+conversa e limites no topo de STATE; contrato em ARCHITECTURE.
+
+Gate completo atual: **403 passed in 32.44s**, Ruff e diff-check aprovados.
+Travamento anterior isolado em `socketpair` local do asyncio/TestClient no sandbox;
+reprodutor mínimo trava no sandbox e passa fora. Suíte passou fora do sandbox sem
+alteração de código/testes. Comando em `docs/quality.md`. Sem serviços externos,
+instalações, commit ou push. Registros e gates abaixo permanecem históricos.
+
 **Data:** 2026-11-13
 
 ## S2 - matcher corrigido e gate aprovado

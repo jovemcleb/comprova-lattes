@@ -5,7 +5,9 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
+import httpx
 import pytest
+from google.genai import Client as SDKClient
 from google.genai import errors, types
 
 from comprova_lattes.config import Settings
@@ -37,11 +39,87 @@ def extractor(text):
     client = Mock()
     client.models.generate_content.return_value = response(text)
     ticks = iter([1.0, 1.125])
-    return GeminiExtractor(client, model="gemini-test", clock=lambda: next(ticks)), client
+    return GeminiExtractor(client, model="gemini-test", clock=lambda: next(ticks), max_attempts=1), client
 
 
 def payload(**fields):
     return json.dumps({"extraction_status": "OK", "activity_count": 1, **fields})
+
+
+def test_sdk_sends_json_schema_without_legacy_schema_conversion():
+    requests = []
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json=response(payload()).model_dump(
+            mode="json", by_alias=True, exclude_none=True,
+        ))
+
+    with (
+        httpx.Client(transport=httpx.MockTransport(handler)) as http_client,
+        SDKClient(api_key="synthetic-test-key", http_options=types.HttpOptions(
+            httpx_client=http_client,
+        )) as client,
+    ):
+        result = GeminiExtractor(client, model="gemini-test").extract(
+            "doc", b"synthetic", "application/pdf",
+        )
+    assert result.extraction_status == ExtractionStatus.OK
+    assert len(requests) == 1
+    generation = requests[0]["generationConfig"]
+    assert "responseSchema" not in generation
+    assert generation["responseJsonSchema"] == ExtractionPayload.model_json_schema()
+    assert generation["responseJsonSchema"]["additionalProperties"] is False
+
+
+def test_explicit_issuer_relation_survives_extraction():
+    snippet = "Instituto Fictício 205 (IF205)"
+    service, _ = extractor(payload(
+        issuer_institution="Instituto Fictício 205", issuer_acronym="IF205",
+        issuer_name_acronym_evidence=snippet,
+    ))
+    result = service.extract("doc", b"synthetic", "application/pdf")
+    assert result.extraction_status == "OK"
+    assert result.issuer_name_acronym_evidence == snippet
+
+
+@pytest.mark.parametrize("model,temperature", [
+    ("gemini-2.5-flash", 0.0), ("gemini-3.8-flash", None),
+    ("models/gemini-4-hydrogen", None), ("gemini-3.1-flash-lite", None),
+])
+def test_model_temperature_policy(model, temperature):
+    service, client = extractor(payload())
+    service.model = model
+    result = service.extract("doc", b"synthetic", "application/pdf")
+    assert client.models.generate_content.call_args.kwargs["config"].temperature == temperature
+    assert result.raw_metadata["temperature"] == temperature
+
+
+@pytest.mark.parametrize("code,calls", [(400, 1), (403, 1), (503, 2), (504, 2)])
+def test_retry_is_bounded_and_audited(code, calls):
+    service, client = extractor(payload())
+    service.max_attempts = 2
+    service.wait = Mock()
+    error = errors.APIError(code, {"error": {"message": "private"}})
+    client.models.generate_content.side_effect = [error, response(payload())]
+    result = service.extract("doc", b"synthetic", "application/pdf")
+    assert client.models.generate_content.call_count == calls
+    assert len(result.raw_metadata["attempts"]) == calls
+    assert service.wait.call_count == calls - 1
+    assert result.extraction_status == ("OK" if calls == 2 else "API_ERROR")
+    assert "private" not in result.model_dump_json()
+
+
+@pytest.mark.parametrize("fields", [
+    {"issuer_acronym": "IF205", "issuer_name_acronym_evidence": "IF205"},
+    {"issuer_institution": "Instituto Fictício 205", "issuer_acronym": "IF205",
+     "issuer_name_acronym_evidence": "Instituto Fictício 205 (IF2050)"},
+    {"extraction_status": "UNREADABLE", "activity_count": 0,
+     "issuer_name_acronym_evidence": "Texto"},
+])
+def test_incomplete_or_invalid_issuer_evidence_rejected(fields):
+    service, _ = extractor(payload(**fields))
+    assert service.extract("doc", b"synthetic", "application/pdf").extraction_status == "INVALID_JSON"
 
 
 @pytest.mark.parametrize("mime", ["application/pdf", "image/png", "image/jpeg", "image/webp"])
@@ -77,9 +155,10 @@ def test_request_and_decimal_conversion(mime):
     assert args["contents"][0].inline_data.data == b"synthetic document"
     assert args["contents"][0].inline_data.mime_type == mime
     config = args["config"]
-    assert config.temperature == 0.0
+    assert config.temperature is None
     assert config.response_mime_type == "application/json"
-    assert config.response_schema is ExtractionPayload
+    assert config.response_schema is None
+    assert config.response_json_schema == ExtractionPayload.model_json_schema()
     assert config.system_instruction == PROMPT
 
 
@@ -88,7 +167,8 @@ def test_reproducibility_metadata():
     metadata = service.extract("doc", b"synthetic", "application/pdf").raw_metadata
     assert metadata["model"] == "gemini-test"
     assert metadata["model_version"] == "gemini-test-pinned-001"
-    assert metadata["temperature"] == 0.0
+    assert metadata["temperature"] is None
+    assert metadata["temperature_policy"] == "provider_default"
     assert metadata["strategy"] == "zero-shot"
     assert metadata["latency_ms"] == 125.0
     assert metadata["tokens"]["total_token_count"] == 30
@@ -202,7 +282,10 @@ def test_settings_factory_uses_explicit_configuration():
     settings = Settings(_env_file=None, gemini_api_key="fake-key", gemini_model="chosen-model")
     with patch("comprova_lattes.extractor.gemini.genai.Client") as factory:
         service = GeminiExtractor.from_settings(settings)
-    factory.assert_called_once_with(api_key="fake-key")
+    factory.assert_called_once()
+    assert factory.call_args.kwargs["api_key"] == "fake-key"
+    assert factory.call_args.kwargs["http_options"].timeout == 120000
+    assert factory.call_args.kwargs["http_options"].retry_options.attempts == 1
     assert service.client is factory.return_value
     assert service.model == "chosen-model"
 

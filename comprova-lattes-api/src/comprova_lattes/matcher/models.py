@@ -15,6 +15,8 @@ from comprova_lattes.schemas.lattes import (
     StrictXmlInt,
 )
 
+from .text import normalize_text
+
 
 class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -58,6 +60,7 @@ class ExtractedDocumentRecord(Contract):
     participation_role_raw: OptionalCleanStr = None
     issuer_institution: OptionalCleanStr = None
     issuer_acronym: OptionalCleanStr = None
+    issuer_name_acronym_evidence: OptionalCleanStr = None
     start_year: StrictXmlInt | None = None
     end_year: StrictXmlInt | None = None
     activity_year: StrictXmlInt | None = None
@@ -65,6 +68,16 @@ class ExtractedDocumentRecord(Contract):
     raw_metadata: dict[str, Any] = Field(default_factory=dict)
     confianca_extracao: Any = None
     categoria_sugerida: Any = None
+
+    @model_validator(mode="after")
+    def validate_issuer_relation(self) -> "ExtractedDocumentRecord":
+        if self.issuer_name_acronym_evidence is not None:
+            snippet = normalize_text(self.issuer_name_acronym_evidence)
+            for value in (self.issuer_institution, self.issuer_acronym):
+                normalized = normalize_text(value)
+                if not normalized or not snippet or f" {normalized} " not in f" {snippet} ":
+                    raise ValueError("Relação institucional exige nome e sigla no trecho literal.")
+        return self
 
 
 Score = Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)]
@@ -116,6 +129,7 @@ class FieldEvidence(Contract):
     numeric_difference: Annotated[FiniteDecimal, Field(ge=0)] | None = None
     outcome: FieldOutcome
     justification_pt: str
+    document_evidence: str | None = None
 
     @model_validator(mode="before")
     @classmethod

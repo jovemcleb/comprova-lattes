@@ -49,3 +49,18 @@ python -m comprova_lattes.experiments --help
 Consulte [experiments/README.md](src/comprova_lattes/experiments/README.md) para geração, calibração somente no piloto, congelamento e replay. São 25 casos por família, cinco categorias e cinco operadores; rótulos sintéticos e parâmetros de teste não são resultados científicos.
 
 A API recebe XML e comprovantes em JSON/base64, exige MatcherConfig explícito e persiste o resultado automático separado dos pareceres humanos. TestClient/SQLite e dispatcher/extrator injetáveis verificam esse fluxo offline. O frontend e os contratos de uso estão no [README da interface](../comprova-lattes-app/README.md).
+## Configuração Gemini atual
+
+Modelo aprovado: `gemini-3.5-flash-lite` (AD-015). Copie `.env.example` para
+`.env` e preencha `GEMINI_API_KEY` localmente, sem publicar a chave. Preserve um
+`.env` existente. Não é necessário instalar outro SDK além de `google-genai`,
+já declarado em `pyproject.toml`.
+
+`GEMINI_TIMEOUT_MS=120000` limita cada tentativa; `GEMINI_MAX_ATTEMPTS=2` inclui
+a inicial. Erros temporários usam espera progressiva e tentativas são registradas
+sem mensagens sensíveis. Gemini 3+ omite temperatura; o valor legado
+`GEMINI_TEMPERATURE=0.0` não significa temperatura efetivamente controlada.
+
+Extração usa `generateContent`, JSON Schema e validação Pydantic local. Sucesso
+com cinco certificados fictícios não equivale a avaliação científica final.
+Resultados e limitações: [sondagem de modelos](../docs/gemini-model-probe-20261115.md).

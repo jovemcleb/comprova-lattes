@@ -1,5 +1,64 @@
 # Project State & Open Decisions
 
+## Modelo escolhido — AD-015 (2026-11-15)
+
+Usuário aprovou `gemini-3.5-flash-lite` após a sondagem comparativa. Atualizados
+modelo padrão do backend e `.env` local, sem alterar a chave. Essa decisão substitui
+a proposta de 2.5 Flash em OPEN-03 e a escolha anterior de 3.8. Temperatura permanece
+omitida para Gemini 3+, com metadados provider_default; não afirmar temperatura zero
+efetiva. Modelo será usado na continuidade do piloto; avaliação final exige congelar
+também prompt e parâmetros. V8 da monografia ainda descreve 2.5 e deve ser atualizada,
+assim como a referência técnica. A sondagem não equivale à avaliação científica final.
+
+## Sondagem real de modelos — 2026-11-15
+
+Comparação autorizada em cinco comprovantes sintéticos `identity` do piloto,
+mesmos bytes e contrato, uma chamada/modelo/documento. 3.8: 0/5 sucessos; 3.1
+Flash-Lite: 4/5, 30/30 campos presentes corretos nos sucessos; 3.5 Flash-Lite:
+5/5, 37/37 campos presentes corretos, média 1,63 s. Sem diferenças nos campos
+ausentes em respostas concluídas. Sondagem simplificada, ordem sequencial e uma
+repetição; não comprova superioridade ou estudo oficial. Modelo configurado
+preservado. Evidências, hashes e limitações em
+[relatório](../../docs/gemini-model-probe-20261115.md).
+
+## Ajustes operacionais Gemini — 2026-11-15
+
+Temperatura omitida em Gemini 3+ com metadados corretos, timeout e número de
+tentativas configuráveis, backoff/jitter e auditoria sanitizada implementados.
+Gate: 412 testes aprovados e Ruff. Catálogo da chave consultado; não prova cota ou
+gratuidade. Teste mínimo 3.8 Flash ainda retorna 504; extração real pendente.
+Modelo não alterado, sem migração para Interactions. Detalhes em quality/ARCHITECTURE.
+
+## Teste real Gemini — 2026-11-15
+
+Primeiro teste com PDF fictício e modelo local `gemini-3.8-flash`: corrigido erro
+400 no transporte do JSON Schema (SDK 3.3.0), passando a `response_json_schema`.
+Após correção, serviço retornou 504 e 503; nenhuma extração bem-sucedida. Não trocar
+modelo ou enfraquecer contrato silenciosamente. Gate offline atualizado: **404 testes
+aprovados em 22,05 s**, Ruff/diff-check aprovados. Detalhes em `docs/quality.md`.
+
+## Verificação atual — 2026-11-15
+
+Investigado travamento da suíte: `socketpair` interno ao loop asyncio bloqueado no
+sandbox, reproduzido sem código do projeto e resolvido ao executar fora dele.
+Gate completo: **403 testes aprovados em 32,44 s**, Ruff e diff-check aprovados.
+Sem correção no código ou dependências; serviços reais continuam não verificados.
+Comandos e evidência em [quality.md](../../docs/quality.md).
+
+## Decisões do usuário — 2026-11-15
+
+- AD-014 aprovada: extrair relação explícita nome/sigla do emissor com trecho
+  documental, aplicá-la apenas ao documento e manter dicionário fixo como apoio.
+  Sigla isolada desconhecida sinaliza incerteza. Implementação e limites em
+  [ARCHITECTURE.md](../codebase/ARCHITECTURE.md), prompt `entities-v2`.
+- Aprovados os três experimentos, incluindo Gemini real e baseline OCR + regras;
+  ampliar cobertura com coexistência de papéis e similaridade limítrofe sem forçar
+  desempate; incluir telas na monografia após teste interativo. Ampliação da bancada
+  e capturas ainda não executadas; tamanho/distribuição continuam pendentes.
+- Usuário concordou em testar Gemini 3.8 Flash no piloto; configuração ainda não
+  alterada. A V8 da monografia especifica 2.5 Flash, portanto OPEN-03 abaixo é
+  histórico e texto/configuração precisam ser reconciliados antes da avaliação.
+
 **Last Updated:** 2026-11-13
 **Current Work:** S2: bloqueio ORGANIZACAO_EVENTO corrigido com autorização em 2026-11-13. Quando event_name=None, evento recebe NOT_APPLICABLE/STRUCTURAL_NOT_APPLICABLE e titulo é essencial, mesmo ausente; com evento preenchido o comportamento anterior permanece. Regressão parametrizada cobre evento documental ausente/presente e título documental ausente. Todos os testes existentes de matcher e experiments preservados; pilot/final aprovados. Gate completo: 396 passed em 24,09 s; Ruff, npm run lint e npm run build com exit 0. Sem instalação, commit/push ou serviços externos; integração real, DTD e estudo oficial continuam pendentes.
 

@@ -1,5 +1,134 @@
 # Verificação da base local
 
+## Gate para preparação Git — 2026-11-15
+
+Suíte completa fora do sandbox: **412 passed in 34.65s**, exit 0, com
+`PYTHONPATH=.venv/Lib/site-packages`, `PYTHONDONTWRITEBYTECODE=1` e
+`python -u -m pytest -q -p no:cacheprovider -o faulthandler_timeout=30
+--basetemp=tests/.tmp-github-gate-20261115`. Ruff: All checks passed, exit 0.
+`docker compose config --quiet`: exit 0, valida configuração sem iniciar serviços.
+Template `.env.example` restaurado sem credenciais, modelo AD-015 e opções de timeout/
+tentativas. `.env` real e artefatos `.tmp-model-probe-20261115/` ignorados pelo Git.
+Varredura dos arquivos alterados comparou a chave local sem exibi-la e procurou
+padrões de credenciais: nenhuma ocorrência. Sem nova chamada Gemini nesse gate.
+
+## Sondagem real comparativa — 2026-11-15
+
+Executadas 15 chamadas em cinco comprovantes fictícios do piloto com o extrator
+real (uma tentativa de até 45 s por modelo/documento). 3.8: 0/5 sucessos; 3.1 Lite:
+4/5; 3.5 Lite: 5/5. Relatório completo e limites em
+[gemini-model-probe-20261115.md](gemini-model-probe-20261115.md).
+Nenhuma modificação no código ou configuração nesta sondagem; não reexecutada suíte
+offline. Não confundir resultado exploratório com avaliação final ou decisão de modelo.
+
+## Política Gemini e catálogo — 2026-11-15
+
+Ajustados timeout (120 s por tentativa), máximo de duas tentativas por padrão,
+backoff/jitter e auditoria sanitizada por tentativa. SDK sem retry interno no cliente
+de produção para evitar multiplicação. Parâmetros configuráveis e limitados; temperatura
+omitida em Gemini 3+ e registrada como null/default, sem alterar modelo ou thinking.
+Contrato e limites operacionais em ARCHITECTURE.
+
+Suíte offline fora do sandbox: `python -u -m pytest -q -p no:cacheprovider
+-o faulthandler_timeout=30 --basetemp=tests/.tmp-gemini-policy` (PYTHONPATH da .venv)
+→ **412 passed in 29.03s**; Ruff aprovado. Regressões novas: política por modelo,
+retentativa de 503/504 com sucesso posterior, ausência de retry para 400/403,
+sanitização e opções do cliente.
+
+Consulta real `client.models.list()` com chave local retornou modelos de geração,
+incluindo 2.5 Flash/Pro/Flash-Lite, 3.1 Flash-Lite, 3.5 Flash/Flash-Lite,
+3.6/3.7/3.8 Flash e 4 Argon/Carbon/Hydrogen, além de modelos especializados.
+Catálogo não confirma cota, gratuidade ou geração operacional de cada modelo.
+Consulta `models.get` de 3.8 Flash confirmou suporte a generateContent.
+Teste mínimo de texto sem PDF/schema/temperatura, timeout 120 s e duas tentativas,
+terminou com 504 DEADLINE_EXCEEDED; não houve geração bem-sucedida. Não migrado para
+Interactions nem testado esse endpoint; nenhum novo pacote instalado. Sem commit/push.
+
+## Primeiro teste real Gemini — 2026-11-15
+
+Usuário configurou chave local e autorizou teste com comprovante fictício. PDF raster
+gerado em memória pela stdlib, sem documentos pessoais. Modelo configurado:
+`gemini-3.8-flash`; SDK instalado `google-genai 3.3.0`; prompt `entities-v2`.
+Credencial não exibida ou salva em relatórios. Execução fora do sandbox após
+ConnectError no ambiente restrito; nenhuma instalação ou mudança do modelo.
+
+- Duas chamadas reais rejeitadas com 400 INVALID_ARGUMENT:
+  `Unknown name "additional_properties" at generation_config.response_schema`.
+  O caminho legado `response_schema=ExtractionPayload` convertia o schema para
+  formato incompatível com o endpoint. Corrigido para
+  `response_json_schema=ExtractionPayload.model_json_schema()`, preservando
+  `additionalProperties: false` e validação Pydantic local.
+- Regressão com SDK real + `httpx.MockTransport` inspeciona o JSON efetivamente
+  enviado (`responseJsonSchema`, sem `responseSchema`), sem rede/credencial real.
+- Após correção: chamada com timeout de 30 s retornou 504 DEADLINE_EXCEEDED em
+  ~28,6 s; última tentativa com timeout de 90 s retornou 503 UNAVAILABLE em
+  ~12,7 s. Sem retentativas automáticas. Nenhuma entidade, versão de modelo ou
+  contagem de tokens retornada. Não houve extração bem-sucedida nem avaliação de
+  precisão; não é possível inferir custo zero ou acesso definitivo só desses erros.
+
+Gate backend fora do sandbox, com `PYTHONPATH=.venv/Lib/site-packages` e
+`PYTHONDONTWRITEBYTECODE=1`, de `comprova-lattes-api/`:
+
+```powershell
+python -u -m pytest -q -p no:cacheprovider -o faulthandler_timeout=30 --basetemp=tests/.tmp-gemini-json-schema-20261115
+python -m ruff check . --no-cache
+```
+
+**404 passed in 22.05s**, exit 0; Ruff e `git diff --check` aprovados.
+Sem PostgreSQL/Redis, commit ou push. Serviços reais seguem parcialmente verificados:
+requisição alcança Google, mas sucesso de extração permanece pendente.
+
+## Investigação do travamento da suíte — 2026-11-15
+
+Diagnóstico confirmado por comparação do mesmo comando dentro/fora do sandbox:
+`socket.socketpair()` do Python 3.14 trava em `socket._fallback_socketpair → accept`
+no sandbox e conclui fora dele (exit 0). O stack de `faulthandler` do primeiro teste
+HTTP mostrou `TestClient.__enter__ → AnyIO → asyncio.ProactorEventLoop →
+_make_self_pipe → socketpair`. O bloqueio ocorre na preparação do loop, antes de
+atender requisições da aplicação. Não foi necessário mudar código, dependências,
+backend assíncrono ou expectativas dos testes.
+
+Os 20 testes de `test_experiments.py` também passaram dentro do sandbox em 14,76 s,
+com temporários em `tests/.tmp-investigation-20261115`; não foi reproduzido um
+problema de temporários nessa execução. Uma coleta interrompida por watchdog de
+10 segundos ainda estava importando dependências: silêncio durante coleta, por si
+só, não prova travamento.
+
+Gate completo executado **fora do sandbox**, de `comprova-lattes-api/`:
+
+```powershell
+$env:PYTHONPATH = '.venv/Lib/site-packages'
+$env:PYTHONDONTWRITEBYTECODE = '1'
+python -u -m pytest -q -p no:cacheprovider -o faulthandler_timeout=30 --basetemp=tests/.tmp-investigation-full-20261115
+```
+
+Resultado: **403 passed in 32.44s**, exit 0. Inclui os sete novos casos AD-014,
+API com SQLite em memória, transportes simulados e experimentos. Dentro do sandbox,
+`python -m ruff check . --no-cache` e `git diff --check` também passaram, exit 0.
+Sem chamadas ao Gemini, PostgreSQL/Redis, instalações ou alterações no código nesta
+investigação. O gate completo substitui a limitação de verificação da rodada AD-014
+abaixo; não comprova integração com os serviços reais. Para este executor, repetir
+os testes HTTP em ambiente que permita conexões locais de loopback.
+
+## AD-014 — relação institucional documental (2026-11-15)
+
+Contrato `entities-v2` com trecho explícito nome/sigla; equivalência local ao
+documento, dicionário fixo preservado, sigla isolada desconhecida inconclusiva.
+De `comprova-lattes-api/`, com `PYTHONPATH=.venv/Lib/site-packages` e
+`PYTHONDONTWRITEBYTECODE=1`, dependências existentes, sem instalação:
+
+- `python -u -m pytest -q -p no:cacheprovider tests/test_extractor.py tests/test_matcher.py tests/test_extractor_matcher.py tests/test_matcher_assignment.py tests/test_matcher_text.py`
+  → **195 passed in 5.47s**, exit 0.
+- `python -m ruff check . --no-cache` → **All checks passed**, exit 0.
+- `git diff --check` → exit 0.
+
+Suíte completa e tentativas ampliadas não finalizaram e foram interrompidas
+(exit 1, sem diagnóstico conclusivo de causa). Não há gate completo aprovado
+nesta rodada; não atribuir esses bloqueios ao código ou ambiente sem investigação.
+Sem Gemini real, PostgreSQL/Redis, alterações de dependências, commit ou push.
+Regressões cobrem transporte do trecho, relação incompleta, tokens de sigla,
+UNREADABLE, escopo por documento, baselines e nome declarado contraditório.
+
 
 ## S2 - ORGANIZACAO_EVENTO corrigido (2026-11-13)
 

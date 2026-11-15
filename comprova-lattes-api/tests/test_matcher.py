@@ -17,7 +17,7 @@ from comprova_lattes.matcher import (
 )
 from comprova_lattes.matcher.association import _optimal, associate
 from comprova_lattes.matcher.engine import classify
-from comprova_lattes.matcher.rules import compare_fields, essential_fields
+from comprova_lattes.matcher.rules import compare_fields, compare_institution, essential_fields
 from comprova_lattes.schemas.lattes import LattesCategory, LattesCurriculum, LattesRecord
 
 
@@ -38,6 +38,43 @@ def config():
         acronym_table={"UFRA": "Universidade Federal Rural da Amazônia"},
         acronym_table_version="synthetic-v1",
     )
+
+
+def test_document_issuer_relation_is_local_and_auditable(config):
+    config = config.model_copy(update={"acronym_table": {}})
+    curricular = record(institution="IF205")
+    doc = document(
+        issuer_institution="Instituto Fictício 205", issuer_acronym="IF205",
+        issuer_name_acronym_evidence="Instituto Fictício 205 (IF205)",
+    )
+    result = compare_institution(curricular, doc, config)
+    assert result.outcome == "MATCH"
+    assert result.rule_applied == "DOCUMENT_ACRONYM_EQUIVALENCE"
+    assert result.document_evidence == doc.issuer_name_acronym_evidence
+    assert config.acronym_table == {}
+    without_relation = doc.model_copy(update={"issuer_name_acronym_evidence": None})
+    assert compare_institution(curricular, without_relation, config).outcome != "MATCH"
+    assert compare_institution(
+        curricular, doc, config.model_copy(update={"mode": MatchMode.BASELINE_NORMALIZED})
+    ).rule_applied != "DOCUMENT_ACRONYM_EQUIVALENCE"
+
+
+def test_unknown_acronym_alone_is_inconclusive(config):
+    result = compare_institution(
+        record(institution="Instituto Fictício 205"),
+        document(issuer_institution=None, issuer_acronym="IF205"), config,
+    )
+    assert result.outcome == "INCONCLUSIVE_BORDERLINE"
+    assert result.rule_applied == "UNKNOWN_INSTITUTION_ACRONYM"
+
+
+def test_document_relation_does_not_override_distinct_declared_name(config):
+    result = compare_institution(
+        record(institution="Outra Universidade", institution_acronym="IF205"),
+        document(issuer_institution="Instituto Fictício 205", issuer_acronym="IF205",
+                 issuer_name_acronym_evidence="Instituto Fictício 205 (IF205)"), config,
+    )
+    assert result.outcome != "MATCH"
 
 
 def record(category="FORMACAO_COMPLEMENTAR", **changes):

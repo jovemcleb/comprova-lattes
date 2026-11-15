@@ -9,6 +9,13 @@ Sistema semiautomatizado para validação do Currículo Lattes por meio do cruza
 
 ## Estado atual — 2026-11-13
 
+**Atualização 2026-11-15:** modelo aprovado `gemini-3.5-flash-lite`, extração com
+JSON Schema corrigido, relação nome/sigla documentada por campo e controle de
+timeout/tentativas. Gate atual: 412 testes backend, Ruff e configuração Compose
+aprovados. Sondagem real em cinco comprovantes sintéticos concluída; resultados e
+limitações em [relatório](docs/gemini-model-probe-20261115.md). O estudo oficial e
+a validação ponta a ponta dos serviços continuam pendentes. Histórico abaixo.
+
 M1–M6 possuem implementação: parser seguro de cinco categorias, motor determinístico, extrator multimodal, bancada sintética/CLI, API assíncrona e interface de revisão humana AD-013. O gate histórico M6 reúne 390 testes backend e lint/build frontend; a rodada S2 e seus limites estão em [docs/quality.md](docs/quality.md). Testes offline usam SDK/extratores simulados e SQLite em memória. A exigência DTD do orientador, equivalência com XML da interface, calibração e estudo experimental oficial permanecem pendentes. PostgreSQL, Redis, Gemini e Tesseract reais não foram exercitados nesses gates.
 
 O núcleo de parsing/testes funciona sem PostgreSQL, Redis ou Gemini. Gramáticas baixadas e legado do Drive são referências locais excluídas do Git; proveniência e instruções em [references/xml-grammars/README.md](references/xml-grammars/README.md).

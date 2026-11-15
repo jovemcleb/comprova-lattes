@@ -136,6 +136,26 @@ def compare_institution(
     result = compare_text("instituicao", left, right, config)
     if config.mode != MatchMode.PROPOSED:
         return result
+    if doc.issuer_name_acronym_evidence:
+        full_name = normalize_text(doc.issuer_institution)
+        acronym = normalize_text(doc.issuer_acronym)
+        declared = {
+            normalize_text(value)
+            for value in (record.institution, record.institution_acronym)
+            if normalize_text(value)
+        }
+        if declared and declared <= {full_name, acronym}:
+            result = evidence(
+                "instituicao", left, right, O.MATCH, "DOCUMENT_ACRONYM_EQUIVALENCE",
+                similarity_score=1.0,
+                lattes_normalized=full_name,
+                document_normalized=full_name,
+                document_evidence=doc.issuer_name_acronym_evidence,
+            )
+            return result.model_copy(update={
+                "justification_pt": "Relação nome/sigla extraída explicitamente deste documento: "
+                + doc.issuer_name_acronym_evidence,
+            })
     known = {normalize_text(value) for value in config.acronym_table.values()}
     a = {
         acronym_identity(value, config.acronym_table)
@@ -165,6 +185,17 @@ def compare_institution(
             right,
             O.CONFLICT,
             "DISTINCT_KNOWN_INSTITUTIONS",
+            similarity_score=0.0,
+            lattes_normalized=normalize_text(left),
+            document_normalized=normalize_text(right),
+        )
+    if result.outcome != O.MATCH and (
+        (not record.institution and record.institution_acronym and not a & known)
+        or (not doc.issuer_institution and doc.issuer_acronym and not b & known)
+    ):
+        return evidence(
+            "instituicao", left, right, O.INCONCLUSIVE_BORDERLINE,
+            "UNKNOWN_INSTITUTION_ACRONYM",
             similarity_score=0.0,
             lattes_normalized=normalize_text(left),
             document_normalized=normalize_text(right),

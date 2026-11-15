@@ -1,5 +1,11 @@
 # Roadmap — Comprova Lattes (TCC 2)
 
+**Atualização 2026-11-15:** AD-014 (equivalência institucional documental) e AD-015
+(`gemini-3.5-flash-lite`) implementadas. Gate atual: 412 testes, Ruff e configuração
+Compose aprovados. Primeira sondagem de extração real concluída; não equivale à
+avaliação oficial M3/M4. Evidência e limites em STATE e
+[relatório](../../docs/gemini-model-probe-20261115.md). Histórico abaixo preservado.
+
 **Current Milestone:** M6 — backend verificado offline; interface implementada com lint/build aprovados
 
 **S2 (2026-11-13):** S2: bloqueio ORGANIZACAO_EVENTO corrigido com autorização em 2026-11-13. Quando event_name=None, evento recebe NOT_APPLICABLE/STRUCTURAL_NOT_APPLICABLE e titulo é essencial, mesmo ausente; com evento preenchido o comportamento anterior permanece. Regressão parametrizada cobre evento documental ausente/presente e título documental ausente. Todos os testes existentes de matcher e experiments preservados; pilot/final aprovados. Gate completo: 396 passed em 24,09 s; Ruff, npm run lint e npm run build com exit 0. Sem instalação, commit/push ou serviços externos; integração real, DTD e estudo oficial continuam pendentes.

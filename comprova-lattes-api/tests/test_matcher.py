@@ -68,6 +68,16 @@ def test_unknown_acronym_alone_is_inconclusive(config):
     assert result.rule_applied == "UNKNOWN_INSTITUTION_ACRONYM"
 
 
+def test_absent_xml_institution_with_unknown_doc_acronym_keeps_missing_lattes(config):
+    result = compare_institution(
+        record("PARTICIPACAO_EVENTO", institution=None, institution_acronym=None),
+        document(issuer_institution=None, issuer_acronym="IF205"),
+        config,
+    )
+    assert result.outcome == "MISSING_LATTES"
+    assert result.rule_applied == "MISSING_LATTES_VALUE"
+
+
 def test_document_relation_does_not_override_distinct_declared_name(config):
     result = compare_institution(
         record(institution="Outra Universidade", institution_acronym="IF205"),

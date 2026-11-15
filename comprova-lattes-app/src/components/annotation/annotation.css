@@ -1,0 +1,33 @@
+/* Revisão experimental: estilos isolados da interface operacional. */
+.annot-banner { border-left: 4px solid #146454; background: #e8f1ec; padding: 16px; margin-block: 16px; }
+.annot-banner p { margin-bottom: 8px; }
+.annot-banner p:last-child { margin-bottom: 0; }
+.annot-layout { display: grid; gap: 24px; grid-template-columns: minmax(220px, 260px) minmax(0, 1fr); align-items: start; }
+.annot-cases { list-style: none; padding: 0; margin: 0; }
+.annot-cases li { margin: 0 0 8px; }
+.annot-cases button { width: 100%; margin: 0; text-align: left; background: white; color: #18342e; border: 1px solid #99ada3; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.annot-cases button:hover { background: #f1f5f2; }
+.annot-cases button[aria-current='true'] { border-color: #146454; border-width: 2px; background: #e8f1ec; }
+.annot-progress { height: 10px; background: #e3e9e5; border-radius: 5px; overflow: hidden; margin-block: 8px; }
+.annot-progress > span { display: block; height: 100%; background: #146454; }
+.annot-split { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.annot-viewer { position: sticky; top: 12px; min-width: 0; }
+.annot-viewer .document-preview { min-height: 640px; }
+.annot-field { border: 1px solid #d9e1db; border-radius: 6px; padding: 4px 16px 12px; margin-block: 12px; }
+.annot-field legend { padding-inline: 6px; padding-top: 0; }
+.annot-inline { display: flex; gap: 20px; flex-wrap: wrap; }
+.annot-field label { margin-block: 10px 0; }
+.annot-record { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; font-size: 14px; margin: 0; }
+.annot-record dt { font-weight: 600; color: #455e55; }
+.annot-record dd { margin: 0; overflow-wrap: anywhere; }
+.annot-summary { margin-top: 0; }
+.annot-errors { padding: 16px; background: #fae7e2; color: #922f24; margin-block: 16px; }
+.annot-errors ul { margin: 8px 0 0 20px; padding: 0; }
+.annot-locked { opacity: .92; border-left: 4px solid #99ada3; padding-left: 14px; }
+.annot-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+.annot-actions button, .annot-actions .button { margin-right: 0; }
+.annot-note { font-size: 13px; color: #586e65; }
+@media (max-width: 960px) {
+  .annot-layout, .annot-split { grid-template-columns: minmax(0, 1fr); }
+  .annot-viewer { position: static; }
+}

@@ -128,11 +128,24 @@ def compare_role(
     )
 
 
+def _first_normalized(*values: str | None) -> str | None:
+    """Return the first raw value that remains non-empty after normalization."""
+    return next((value for value in values if normalize_text(value) is not None), None)
+
+
 def compare_institution(
     record: LattesRecord, doc: ExtractedDocumentRecord, config: MatcherConfig
 ) -> FieldEvidence:
-    left = record.institution or record.institution_acronym
-    right = doc.issuer_institution or doc.issuer_acronym
+    left = (
+        _first_normalized(record.institution, record.institution_acronym)
+        or record.institution
+        or record.institution_acronym
+    )
+    right = (
+        _first_normalized(doc.issuer_institution, doc.issuer_acronym)
+        or doc.issuer_institution
+        or doc.issuer_acronym
+    )
     result = compare_text("instituicao", left, right, config)
     if config.mode != MatchMode.PROPOSED:
         return result
@@ -189,9 +202,17 @@ def compare_institution(
             lattes_normalized=normalize_text(left),
             document_normalized=normalize_text(right),
         )
-    if result.outcome != O.MATCH and (
-        (not record.institution and record.institution_acronym and not a & known)
-        or (not doc.issuer_institution and doc.issuer_acronym and not b & known)
+    if result.outcome in {O.CONFLICT, O.INCONCLUSIVE_BORDERLINE} and (
+        (
+            not normalize_text(record.institution)
+            and normalize_text(record.institution_acronym)
+            and not a & known
+        )
+        or (
+            not normalize_text(doc.issuer_institution)
+            and normalize_text(doc.issuer_acronym)
+            and not b & known
+        )
     ):
         return evidence(
             "instituicao", left, right, O.INCONCLUSIVE_BORDERLINE,
@@ -315,6 +336,8 @@ def essential_fields(record: LattesRecord) -> set[str]:
             required.add("papel_participacao")
         if record.title:
             required.add("titulo")
+        if normalize_text(record.institution) or normalize_text(record.institution_acronym):
+            required.add("instituicao")
     if record.start_year is not None or record.end_year is not None:
         required.add("ano")
     if workload_applicable(record) and record.workload_hours is not None:

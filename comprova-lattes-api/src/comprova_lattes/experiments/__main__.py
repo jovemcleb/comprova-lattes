@@ -11,11 +11,24 @@ from pydantic import BaseModel
 from comprova_lattes.matcher.models import ExtractedDocumentRecord, MatcherConfig
 
 from .freeze import calibrate, freeze, verify
-from .runner import experiment1, experiment2, experiment3, extraction_inference, inference
+from .reporting import sanitize_json_value
+from .runner import (
+    experiment1,
+    experiment2,
+    experiment3,
+    extraction_inference,
+    inference,
+    integrated_inference,
+)
+from .statistics import PROTOCOL_BOOTSTRAP_CONFIDENCE, PROTOCOL_BOOTSTRAP_REPLICATES
 from .synthetic import Corpus, generate
 
 
 def _default(value):
+    if isinstance(value, ExtractedDocumentRecord):
+        dumped = value.model_dump(mode="python")
+        dumped["raw_metadata"] = sanitize_json_value(dumped.get("raw_metadata", {}))
+        return dumped
     if isinstance(value, BaseModel):
         return value.model_dump(mode="python")
     if isinstance(value, bytes):
@@ -55,6 +68,24 @@ class Replay:
         return self.runs[index][document_id]
 
 
+def _resolve_cli_bootstrap_kwargs(args) -> dict | None:
+    if args.seed is None:
+        if args.replicates is not None or args.confidence is not None:
+            raise ValueError("Informe --seed explícita ao especificar --replicates ou --confidence")
+        return None
+    replicates = (
+        PROTOCOL_BOOTSTRAP_REPLICATES if args.replicates is None else args.replicates
+    )
+    confidence = (
+        PROTOCOL_BOOTSTRAP_CONFIDENCE if args.confidence is None else args.confidence
+    )
+    return {
+        "seed": args.seed,
+        "replicates": replicates,
+        "confidence": confidence,
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -86,8 +117,8 @@ def main(argv=None):
             if name == "exp1":
                 cmd.add_argument("--baseline", type=Path, required=True)
             cmd.add_argument("--seed", type=int, required=name == "exp2")
-            cmd.add_argument("--replicates", type=int, required=name == "exp2")
-            cmd.add_argument("--confidence", type=float, required=name == "exp2")
+            cmd.add_argument("--replicates", type=int, default=None)
+            cmd.add_argument("--confidence", type=float, default=None)
     for cmd in sub.choices.values():
         cmd.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
@@ -111,16 +142,16 @@ def main(argv=None):
                 verify(manifest, corpus, artifacts)
                 config = MatcherConfig.model_validate(manifest["payload"]["calibration"]["config"])
                 cases = corpus.select(args.partition)
+                bootstrap_kwargs = _resolve_cli_bootstrap_kwargs(args)
                 if args.command == "exp2":
+                    assert bootstrap_kwargs is not None
                     reports = experiment2(cases, config)
                     result = {
                         "reports": reports,
                         "statistics": inference(
                             reports,
                             cases,
-                            seed=args.seed,
-                            replicates=args.replicates,
-                            confidence=args.confidence,
+                            **bootstrap_kwargs,
                         ),
                     }
                 else:
@@ -134,27 +165,14 @@ def main(argv=None):
                             experiment1(cases, Replay(runs), Replay([records(read(args.baseline))]))
                         )
                     )
+                    if bootstrap_kwargs is not None:
+                        result["statistics"] = (
+                            extraction_inference(result, cases, **bootstrap_kwargs)
+                            if args.command == "exp1"
+                            else integrated_inference(result, cases, **bootstrap_kwargs)
+                        )
                 result["partition"] = args.partition
                 result["freeze_sha256"] = manifest["sha256"]
-                if args.command != "exp2":
-                    parameters = (args.seed, args.replicates, args.confidence)
-                    if any(p is not None for p in parameters):
-                        if any(p is None for p in parameters):
-                            raise ValueError("Informe seed, replicates e confidence juntos")
-                        kwargs = {
-                            "seed": args.seed,
-                            "replicates": args.replicates,
-                            "confidence": args.confidence,
-                        }
-                        result["statistics"] = (
-                            extraction_inference(result, cases, **kwargs)
-                            if (args.command == "exp1")
-                            else inference(
-                                {f"repeat_{i + 1}": r for i, r in enumerate(result["runs"])},
-                                cases,
-                                **kwargs,
-                            )
-                        )
     write(args.output, result)
 
 

@@ -251,19 +251,53 @@ def document_text(
     return "\n".join((header, presentation, *lines))
 
 
+def _apply_legitimate_variation(values: dict[str, object], index: int) -> None:
+    """Aplica variação equivalente (espaços, caixa ou pontuação) sem alterar conteúdo."""
+    style = index % 3
+    if style == 0:
+        for key in ("holder_name", "activity_title", "event_name", "issuer_institution"):
+            text = values[key]
+            if isinstance(text, str):
+                values[key] = "  ".join(text.split())
+    elif style == 1:
+        for key in ("holder_name", "activity_title", "event_name", "issuer_institution"):
+            text = values[key]
+            if isinstance(text, str):
+                parts = text.split()
+                values[key] = (
+                    " ".join([*(word.capitalize() for word in parts[:-1]), parts[-1]])
+                    if len(parts) > 1
+                    else text.lower()
+                )
+    else:
+        separators = {
+            "holder_name": ", ",
+            "activity_title": " - ",
+            "event_name": ": ",
+            "issuer_institution": ", ",
+        }
+        for key, sep in separators.items():
+            text = values[key]
+            if isinstance(text, str):
+                prefix, _, suffix = text.rpartition(" ")
+                values[key] = f"{prefix}{sep}{suffix}" if prefix else f"{text}."
+
+
 def generate(*, seed: int, pilot_families: int, final_families: int) -> Corpus:
     """Cada família contém uma categoria e cinco operadores; tamanhos explícitos.
 
     Família inclui registro-base, emissor e template exclusivos; variantes do
-    mesmo registro compartilham emissor. Identidades, layout e seed de ruído
-    derivam de (seed, partition, index), mantendo o piloto invariável quando
-    final_families muda e o padrão de ruído estável por família sem alterar a
-    degradação. Categorias alternam em cada partição, com equilíbrio exato nos
-    tamanhos aprovados múltiplos de cinco (10 famílias piloto = 50 casos e
-    20 famílias finais = 100 casos). Rótulos são intenções, não anotações humanas.
-    Templates textuais em português são rascunho de composição assistida por
-    agente (TEMPLATE_PROVENANCE), pendente de validação humana antes do
-    congelamento, sem alegação de independência metodológica ou conformidade XSD/DTD.
+    mesmo registro compartilham emissor e presença de relação sigla/evidência
+    AD-014 (regra prévia por índice de família, independente de classe/operador).
+    Identidades, layout e seed de ruído derivam de (seed, partition, index),
+    mantendo o piloto invariável quando final_families muda e o padrão de ruído
+    estável por família sem alterar a degradação. Categorias alternam em cada
+    partição, com equilíbrio exato nos tamanhos aprovados múltiplos de cinco
+    (10 famílias piloto = 50 casos e 20 famílias finais = 100 casos). Rótulos são
+    intenções, não anotações humanas. Templates textuais em português são rascunho
+    de composição assistida por agente (TEMPLATE_PROVENANCE), pendente de validação
+    humana antes do congelamento, sem alegação de independência metodológica ou
+    conformidade XSD/DTD.
     """
     if pilot_families < 1 or final_families < 1:
         raise ValueError("Ambas as partições precisam de famílias")
@@ -273,6 +307,7 @@ def generate(*, seed: int, pilot_families: int, final_families: int) -> Corpus:
             fid = hashlib.sha256(f"{seed}:{partition}:{index}".encode()).hexdigest()[:12]
             layout = int(fid, 16)
             category = index % 5
+            has_ad014 = index % 2 == 0
             xml = _xml(category, fid.upper())
             curriculum = parse_lattes_xml(xml)
             r = curriculum.records[0]
@@ -293,14 +328,9 @@ def generate(*, seed: int, pilot_families: int, final_families: int) -> Corpus:
                 cid = hashlib.sha256(f"{fid}:{category}:{variant}".encode()).hexdigest()[:20]
                 values = dict(base)
                 expected = MatchStatus.VALIDADO
+                acronym_suffix = fid.upper()
                 if operator == "legitimate":
-                    acronym = f"IF{fid.upper()}"
-                    values["holder_name"] = values["holder_name"].replace(" ", "  ")
-                    values["issuer_acronym"] = acronym
-                    values["issuer_name_acronym_evidence"] = (
-                        f"{values['issuer_institution']} - {acronym}"
-                    )
-                    values["activity_title"] = "X" + values["activity_title"][1:]
+                    _apply_legitimate_variation(values, index)
                 elif operator == "factual_mutation":
                     if category in (0, 1):
                         values["workload_hours"] = 45 if category == 0 else 400
@@ -312,14 +342,18 @@ def generate(*, seed: int, pilot_families: int, final_families: int) -> Corpus:
                             f"PESSOA FICTICIA {alternative_identity(seed, fid, 'holder_name')}"
                         )
                     else:
-                        values["issuer_institution"] = (
-                            "INSTITUTO FICTICIO "
-                            f"{alternative_identity(seed, fid, 'issuer_institution')}"
-                        )
+                        acronym_suffix = alternative_identity(seed, fid, "issuer_institution")
+                        values["issuer_institution"] = f"INSTITUTO FICTICIO {acronym_suffix}"
                     expected = MatchStatus.DIVERGENTE
                 elif operator in ("omission", "no_document"):
                     values["holder_name"] = None
                     expected = MatchStatus.INCONCLUSIVO
+                if has_ad014 and operator != "no_document":
+                    acronym = f"IF{acronym_suffix}"
+                    values["issuer_acronym"] = acronym
+                    values["issuer_name_acronym_evidence"] = (
+                        f"{values['issuer_institution']} - {acronym}"
+                    )
                 level = (category + variant + index) % 3
                 mime = "image/png" if (category + variant) % 2 else "application/pdf"
                 gold = data = None

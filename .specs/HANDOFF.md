@@ -1,5 +1,22 @@
 # Handoff — Comprova Lattes
 
+## Integração global verificada — 2026-11-15
+
+Coordenador recolheu statistics-integration succeeded e verificou estado integrado
+com política institucional e interface: suíte backend completa548passed em57,66s
+(fora sandbox),Ruffglobal aprovado;npm run lint e npm run build frontend aprovados;
+git diff --check aprovado após remover linhasbrancasextrasEOF em3arquivos estatísticos.
+McNemar somente4pares contraLevenshtein+Holm,bootstrap95%2000famílias(repetições
+preservadas),ICmédia e execuçãoCLI integrados. Testes antigos A:B reconciliados.
+Interface /revisao-experimental com pacote piloto5casos e JSON individual implementada;
+ensaio humano e aprovação de templates/guia ainda nãoexecutados. As2falhas históricas
+não bloqueiam mais gate software; erros experimentais continuam em métricas/gabaritos
+inalterados. Comportamento institucional ambíguo agoraInconclusivo pela regraaprovada.
+Última publicação continua8a168e2; mudanças posteriores locais não foram publicadas.
+Sem API Gemini,calibraçãooficial,finalgerado/congelado ouanotaçõeshumanas nesta checagem.
+Próximo: ensaio humano5piloto e ajustesguia antes de anotação/calibraçãooficiais.
+
+
 ## Contexto para Elivanilso — publicação de 2026-11-15
 
 **Leia este resumo primeiro; seções datadas abaixo preservam histórico.**

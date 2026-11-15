@@ -1,5 +1,75 @@
 # Project State & Open Decisions
 
+## Integração global verificada — 2026-11-15
+
+Coordenador recolheu statistics-integration succeeded e verificou estado integrado
+com política institucional e interface: suíte backend completa548passed em57,66s
+(fora sandbox),Ruffglobal aprovado;npm run lint e npm run build frontend aprovados;
+git diff --check aprovado após remover linhasbrancasextrasEOF em3arquivos estatísticos.
+McNemar somente4pares contraLevenshtein+Holm,bootstrap95%2000famílias(repetições
+preservadas),ICmédia e execuçãoCLI integrados. Testes antigos A:B reconciliados.
+Interface /revisao-experimental com pacote piloto5casos e JSON individual implementada;
+ensaio humano e aprovação de templates/guia ainda nãoexecutados. As2falhas históricas
+não bloqueiam mais gate software; erros experimentais continuam em métricas/gabaritos
+inalterados. Comportamento institucional ambíguo agoraInconclusivo pela regraaprovada.
+Última publicação continua8a168e2; mudanças posteriores locais não foram publicadas.
+Sem API Gemini,calibraçãooficial,finalgerado/congelado ouanotaçõeshumanas nesta checagem.
+Próximo: ensaio humano5piloto e ajustesguia antes de anotação/calibraçãooficiais.
+
+
+## Política institucional implementada e verificada — 2026-11-15
+
+Hydrogen entregou instituição essencial nas3categorias eventos somente quando
+nome/sigla normalizável está declarado noXML. Ausência/ambiguidade documental =>
+Inconclusivo;CONFLICTdecisivo mantémDivergente;XMLseminstituição nãoinventa exigência.
+Fallbacknome/sigla ignora pontuação vazia,unknownacronym não substitui ausência.
+Coordenador executou test_event_institution_policy+test_matcher+
+test_performance_reporting_contract:148passed em6,36s;Ruff arquivosafetados aprovado.
+Gabaritos/limiares intactos;caso instituição mutada limítrofe passa deValidado para
+Inconclusivo (expectedDivergente continua, erro permanece explícito). Titular limítrofe
+não corrigido por esta política. IntegraçãoestatísticaArgon continua emandamento,
+gatecompleto seráexecutado após entrega;sem estudooficial/Gemini/push.
+
+
+## Instituição em eventos — regra aprovada (2026-11-15)
+
+Usuário aprovou nas três categorias de eventos: instituição declarada no XML e
+não comprovada ou ambígua no documento impede Validado (Inconclusivo); conflito
+factual mantém Divergente; instituição não declarada no XML não exige comparação
+impossível nem inferência. Preservar prioridade de conflito decisivo em outroscampos.
+Implementação/testes pendentes; limiares e gabaritos não autorizados a mudar.
+Resultados Argon recolhidos: interface succeeded; estatística failed sem resposta
+final mas deixou código. Coordenador verifica antes afirmar conclusão.
+
+
+## Separação contrato/desempenho recebida — 2026-11-15
+
+Hydrogen refatorou testes de contrato sem exigir perfeição/superioridade sobre
+baseline e acrescentou test_performance_reporting_contract.py: métricas confrontadas
+com exemplos independentes e erros de regra preservados em rows/matriz/porcategoria.
+Nenhuma alteração no motor,limiares ou expected/gold. Coordenador verificou13testes
+(performance_reporting_contract,certificate_templates,synthetic_leakage) aprovados
+em12,74s e Ruff nos arquivos testes afetados. Worker relata24tests_experiments e111
+matcher/reporting aprovados; integração global ainda pendente, estatística/interface
+concorrentes em andamento. Separação não corrige instituição borderline Validado ou
+titular borderline Inconclusivo: limitações continuam nos relatórios. Registro antigo
+de2testes falhando é histórico; não afirmar gate globalverde antes integrar demais.
+
+
+## Refinamento e diagnóstico Hydrogen verificados — 2026-11-15
+
+Sigla/evidência distribuídas por família entre operadores, relação documental
+mutada coerente e X inicial substituído por variações normalizáveis. Coordenador:
+31passed/2failed em16,13s nos testes experimentos/templates/leakage;Ruff aprovado.
+Falhas agora expõem pressuposto injustificado de superioridade: macroF1 proposto
+0,8849206349 não supera BaselineNormalizado1,0 nos fixtures. Diagnóstico subjacente:
+titular com prefixo comum é borderline/Inconclusivo; instituição borderline em
+Organização não essencial permite Validado. Sem alterar motor,limiares,expected
+ou mascarar assertions. Decisão sobre separar teste de contrato de desempenho e
+sobre essencialidade institucional permanece pendente. Relatório responsável:
+.specs/docs/benchmark-refinement.md. Interface concorrente não revisada nesta tarefa.
+
+
 ## Protocolo aprovado — 2026-11-15
 
 Usuário aprovou três execuções separadas + média das métricas; IC95% com2.000

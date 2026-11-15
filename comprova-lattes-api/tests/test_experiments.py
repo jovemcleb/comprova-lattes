@@ -36,6 +36,7 @@ from comprova_lattes.experiments.synthetic import (
     synthetic_acronyms,
 )
 from comprova_lattes.matcher.models import ExtractedDocumentRecord, MatcherConfig, MatcherThresholds
+from comprova_lattes.matcher.text import normalize_text
 
 
 @pytest.fixture(scope="module")
@@ -183,20 +184,19 @@ def test_runners_and_propagation(corpus, config):
     assert result["error_causes"].get("association", 0)
     stats = inference(reports, cases, seed=8, replicates=10, confidence=0.95)
     assert stats["intervals"]["A"]["families"] == 5
-    assert stats["mcnemar"]["A:B"]["n"] == 5
+    assert list(stats["mcnemar"]) == [
+        "LEVENSHTEIN_NORM:A",
+        "LEVENSHTEIN_NORM:B",
+        "LEVENSHTEIN_NORM:JARO_WINKLER",
+        "LEVENSHTEIN_NORM:TOKEN_HYBRID",
+    ]
+    assert "A:B" not in stats["mcnemar"]
+    assert all(entry["n"] == 5 for entry in stats["mcnemar"].values())
 
 
-@pytest.mark.parametrize("partition", ["pilot", "final"])
-def test_synthetic_categories_and_operator_verdicts(corpus, config, partition):
-    import comprova_lattes.experiments.render as render_module
-
-    glyphs = getattr(render_module, "_GLYPHS", None)
-    cases = corpus.select(partition)
-    assert len(cases) == 25
-    reports = experiment2(cases, config)
-    proposed = reports["LEVENSHTEIN_NORM"]
-    assert proposed["macro_f1"] > reports["A"]["macro_f1"]
-    assert proposed["macro_f1"] > reports["B"]["macro_f1"]
+def _assert_unit_contracts_on_proposed(cases, proposed, glyphs):
+    ad014_present_ops = set()
+    ad014_absent_ops = set()
     for case, row in zip(cases, proposed["rows"], strict=True):
         record = case.curriculum.records[0]
         assert record.title and record.institution
@@ -205,6 +205,9 @@ def test_synthetic_categories_and_operator_verdicts(corpus, config, partition):
             assert record.event_name is None
         elif record.category in ("PARTICIPACAO_EVENTO", "APRESENTACAO_TRABALHO"):
             assert record.event_name
+
+        assert row["association_correct"]
+
         if case.gold:
             text = document_text(
                 case.gold, int(case.family_id, 16), category=record.category
@@ -212,27 +215,71 @@ def test_synthetic_categories_and_operator_verdicts(corpus, config, partition):
             assert all(ch.isprintable() or ch == "\n" for ch in text)
             if glyphs is not None:
                 assert set(text.upper()) <= set(glyphs) | {" ", "\n"}
-        if case.operator in ("identity", "legitimate"):
-            assert row["status"] == "VALIDADO", (record.category, case.operator, row)
             if record.category == "APRESENTACAO_TRABALHO":
                 assert case.gold.participation_role_raw == "APRESENTADOR"
-            if case.operator == "legitimate":
-                inst = next(
-                    f
-                    for f in row["automatic"]["field_evidences"]
-                    if f["field_name"] == "instituicao"
-                )
-                assert inst["rule_applied"] == "DOCUMENT_ACRONYM_EQUIVALENCE"
-                assert inst["document_evidence"] == case.gold.issuer_name_acronym_evidence
+
+            inst = next(
+                f
+                for f in row["automatic"]["field_evidences"]
+                if f["field_name"] == "instituicao"
+            )
+            is_mutated_org = (
+                case.operator == "factual_mutation" and record.category == "ORGANIZACAO_EVENTO"
+            )
+            if case.gold.issuer_name_acronym_evidence is not None:
+                assert case.gold.issuer_acronym is not None
+                ad014_present_ops.add(case.operator)
+                if is_mutated_org:
+                    assert inst["rule_applied"] != "DOCUMENT_ACRONYM_EQUIVALENCE"
+                    assert inst["document_evidence"] is None
+                else:
+                    assert inst["rule_applied"] == "DOCUMENT_ACRONYM_EQUIVALENCE"
+                    assert inst["document_evidence"] == case.gold.issuer_name_acronym_evidence
+                    assert inst["outcome"] == "MATCH"
+            else:
+                assert case.gold.issuer_acronym is None
+                ad014_absent_ops.add(case.operator)
+                assert inst["rule_applied"] != "DOCUMENT_ACRONYM_EQUIVALENCE"
+                assert inst["document_evidence"] is None
+                if not is_mutated_org:
+                    assert inst["outcome"] == "MATCH"
+
+        if case.operator in ("identity", "legitimate"):
+            assert row["status"] == "VALIDADO", (record.category, case.operator, row)
+            assert row["reason"] == "VALIDADO_CORRESPONDENCIA_COMPLETA"
+            assert row["correct"]
         elif case.operator == "factual_mutation":
-            assert row["status"] == "DIVERGENTE"
-            assert row["association_correct"]
-        else:
+            assert row["expected"] == "DIVERGENTE"
+        elif case.operator == "omission":
             assert row["status"] == "INCONCLUSIVO"
-    assert proposed["macro_f1"] == 1
+            assert row["reason"] == "EVIDENCIA_INSUFICIENTE"
+            assert row["correct"]
+        elif case.operator == "no_document":
+            assert row["status"] == "INCONCLUSIVO"
+            assert row["reason"] == "SEM_COMPROVANTE"
+            assert row["correct"]
+        else:
+            pytest.fail(f"Operador inesperado: {case.operator}")
+
+    expected_doc_ops = {"identity", "legitimate", "factual_mutation", "omission"}
+    assert ad014_present_ops == expected_doc_ops
+    assert ad014_absent_ops == expected_doc_ops
+
+
+@pytest.mark.parametrize("partition", ["pilot", "final"])
+def test_synthetic_categories_and_operator_verdicts(corpus, config, partition):
+    """Contrato unitário/estrutural separado da avaliação de desempenho calibrada."""
+    import comprova_lattes.experiments.render as render_module
+
+    glyphs = getattr(render_module, "_GLYPHS", None)
+    cases = corpus.select(partition)
+    assert len(cases) == 25
+    proposed = experiment2(cases, config)["LEVENSHTEIN_NORM"]
+    _assert_unit_contracts_on_proposed(cases, proposed, glyphs)
     if partition == "final":
         empty_table = config.model_copy(update={"acronym_table": {}})
-        assert experiment2(cases, empty_table)["LEVENSHTEIN_NORM"]["macro_f1"] == 1
+        empty_proposed = experiment2(cases, empty_table)["LEVENSHTEIN_NORM"]
+        _assert_unit_contracts_on_proposed(cases, empty_proposed, glyphs)
 
 
 def test_synthetic_xml_structure_and_raster_alphabet(corpus):
@@ -276,23 +323,52 @@ def test_legitimate_variation_and_factual_mutations(corpus, config):
     }
     for case in corpus.cases:
         record = case.curriculum.records[0]
+        if case.gold is not None:
+            is_mutated_inst = (
+                case.operator == "factual_mutation" and record.category == "ORGANIZACAO_EVENTO"
+            )
+            if case.gold.issuer_name_acronym_evidence is not None:
+                expected_suffix = (
+                    alternative_identity(corpus.seed, case.family_id, "issuer_institution")
+                    if is_mutated_inst
+                    else case.issuer_id.upper()
+                )
+                expected_acronym = f"IF{expected_suffix}"
+                assert case.gold.issuer_acronym == expected_acronym
+                assert (
+                    case.gold.issuer_name_acronym_evidence
+                    == f"{case.gold.issuer_institution} - {expected_acronym}"
+                )
+                xml_acronym_rel = compare_institution(
+                    record.model_copy(update={"institution": f"IF{case.issuer_id.upper()}"}),
+                    case.gold,
+                    empty_config,
+                )
+                doc_acronym_rel = compare_institution(
+                    record.model_copy(update={"institution": expected_acronym}),
+                    case.gold,
+                    empty_config,
+                )
+                if is_mutated_inst:
+                    assert xml_acronym_rel.outcome != "MATCH"
+                    assert (
+                        compare_institution(record, case.gold, empty_config).rule_applied
+                        != "DOCUMENT_ACRONYM_EQUIVALENCE"
+                    )
+                    assert doc_acronym_rel.rule_applied == "DOCUMENT_ACRONYM_EQUIVALENCE"
+                else:
+                    assert doc_acronym_rel.outcome == "MATCH"
+                    assert doc_acronym_rel.rule_applied == "DOCUMENT_ACRONYM_EQUIVALENCE"
+                    assert doc_acronym_rel.document_evidence == case.gold.issuer_name_acronym_evidence
+            else:
+                assert case.gold.issuer_acronym is None
+
         if case.operator == "legitimate":
             expected_acronym = f"IF{case.issuer_id.upper()}"
-            assert case.gold.issuer_institution == record.institution
-            assert case.gold.issuer_acronym == expected_acronym
-            assert (
-                case.gold.issuer_name_acronym_evidence
-                == f"{record.institution} - {expected_acronym}"
+            assert normalize_text(case.gold.issuer_institution) == normalize_text(
+                record.institution
             )
             assert synthetic_acronyms((case,))[expected_acronym] == record.institution
-            local_rel = compare_institution(
-                record.model_copy(update={"institution": expected_acronym}),
-                case.gold,
-                empty_config,
-            )
-            assert local_rel.outcome == "MATCH"
-            assert local_rel.rule_applied == "DOCUMENT_ACRONYM_EQUIVALENCE"
-            assert local_rel.document_evidence == case.gold.issuer_name_acronym_evidence
             acronym_only_doc = case.gold.model_copy(
                 update={
                     "issuer_institution": expected_acronym,
@@ -314,8 +390,19 @@ def test_legitimate_variation_and_factual_mutations(corpus, config):
                     compare_institution(record, acronym_only_doc, with_table).rule_applied
                     == "ACRONYM_EQUIVALENCE"
                 )
-            assert len(record.title) >= 25
-            assert sum(a != b for a, b in zip(record.title, case.gold.activity_title)) == 1
+            assert case.gold.activity_title != "X" + record.title[1:]
+            assert normalize_text(case.gold.activity_title) == normalize_text(record.title)
+            assert normalize_text(case.gold.holder_name) == normalize_text(
+                case.curriculum.full_name
+            )
+            assert any(
+                [
+                    case.gold.holder_name != case.curriculum.full_name,
+                    case.gold.activity_title != record.title,
+                    case.gold.issuer_institution != record.institution,
+                    case.gold.event_name != record.event_name,
+                ]
+            )
         elif case.operator == "factual_mutation":
             baseline_gold = identity_by_family[case.family_id].gold
             if record.category in scalar_mutations:
@@ -345,12 +432,16 @@ def test_legitimate_variation_and_factual_mutations(corpus, config):
                 assert case.gold.issuer_institution != record.institution
                 assert case.gold.issuer_institution.startswith("INSTITUTO FICTICIO ")
                 assert len(case.gold.issuer_institution) == len(record.institution)
-                assert case.gold.model_copy(
-                    update={
-                        "document_id": baseline_gold.document_id,
-                        "issuer_institution": baseline_gold.issuer_institution,
-                    }
-                ) == baseline_gold
+                restore = {
+                    "document_id": baseline_gold.document_id,
+                    "issuer_institution": baseline_gold.issuer_institution,
+                }
+                if baseline_gold.issuer_name_acronym_evidence is not None:
+                    restore["issuer_acronym"] = baseline_gold.issuer_acronym
+                    restore["issuer_name_acronym_evidence"] = (
+                        baseline_gold.issuer_name_acronym_evidence
+                    )
+                assert case.gold.model_copy(update=restore) == baseline_gold
 
 
 def test_statistics_known_values():
@@ -593,3 +684,41 @@ def test_template_relative_key_order_and_skip_no_document_render(monkeypatch, co
         for c in sample.cases
         if c.operator == "no_document"
     )
+
+
+@pytest.mark.parametrize("partition", ["pilot", "final"])
+def test_synthetic_unit_contracts_with_distributed_ad014(corpus, config, partition):
+    cases = corpus.select(partition)
+    proposed = experiment2(cases, config)["LEVENSHTEIN_NORM"]
+    ad014_ops_seen = set()
+    no_ad014_ops_seen = set()
+    for case, row in zip(cases, proposed["rows"], strict=True):
+        record = case.curriculum.records[0]
+        assert row["association_correct"]
+        if case.operator in ("identity", "legitimate"):
+            assert row["status"] == "VALIDADO"
+        elif case.operator in ("omission", "no_document"):
+            assert row["status"] == "INCONCLUSIVO"
+
+        if case.gold is not None:
+            inst = next(
+                f
+                for f in row["automatic"]["field_evidences"]
+                if f["field_name"] == "instituicao"
+            )
+            if case.gold.issuer_name_acronym_evidence is not None:
+                ad014_ops_seen.add(case.operator)
+                if case.operator == "factual_mutation" and record.category == "ORGANIZACAO_EVENTO":
+                    assert inst["rule_applied"] != "DOCUMENT_ACRONYM_EQUIVALENCE"
+                    assert inst["document_evidence"] is None
+                else:
+                    assert inst["rule_applied"] == "DOCUMENT_ACRONYM_EQUIVALENCE"
+                    assert inst["document_evidence"] == case.gold.issuer_name_acronym_evidence
+            else:
+                no_ad014_ops_seen.add(case.operator)
+                assert inst["rule_applied"] != "DOCUMENT_ACRONYM_EQUIVALENCE"
+                assert inst["document_evidence"] is None
+
+    expected_doc_ops = {"identity", "legitimate", "factual_mutation", "omission"}
+    assert ad014_ops_seen == expected_doc_ops
+    assert no_ad014_ops_seen == expected_doc_ops

@@ -164,12 +164,16 @@ def test_literal_values_omissions_decimal_workload_and_ad014_evidence(corpus_50)
             else:
                 assert observed_map[label] == str(val)
 
-        if case.operator == "legitimate":
-            expected_acronym = f"IF{case.issuer_id.upper()}"
-            expected_snippet = f"{case.gold.issuer_institution} - {expected_acronym}"
-            assert observed_map["Sigla da instituição"] == expected_acronym
+        if case.gold.issuer_name_acronym_evidence is not None:
+            assert case.gold.issuer_acronym is not None
+            expected_snippet = f"{case.gold.issuer_institution} - {case.gold.issuer_acronym}"
+            assert observed_map["Sigla da instituição"] == case.gold.issuer_acronym
             assert observed_map["Identificação da instituição"] == expected_snippet
-        elif case.operator == "omission":
+        else:
+            assert case.gold.issuer_acronym is None
+            assert "Sigla da instituição" not in observed_map
+            assert "Identificação da instituição" not in observed_map
+        if case.operator == "omission":
             assert "Titular" not in observed_map
 
 
@@ -241,3 +245,9 @@ def test_workbench_150_distribution_isolation_and_provenance():
         assert set(cat_counts) == set(LattesCategory)
         assert set(cat_counts.values()) == {expected_families}
         assert set(op_counts.values()) == {expected_families}
+        ad014_ops = {
+            c.operator
+            for c in part_cases
+            if c.gold is not None and c.gold.issuer_name_acronym_evidence is not None
+        }
+        assert ad014_ops == {"identity", "legitimate", "factual_mutation", "omission"}

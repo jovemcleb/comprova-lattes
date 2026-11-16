@@ -110,6 +110,37 @@ def test_retry_is_bounded_and_audited(code, calls):
     assert "private" not in result.model_dump_json()
 
 
+@pytest.mark.parametrize("exc_module", ["httpx", "httpx2"])
+def test_http_and_httpx2_read_timeout_retry_and_recover(exc_module):
+    mod = pytest.importorskip(exc_module)
+    service, client = extractor(payload())
+    service.max_attempts = 2
+    service.wait = Mock()
+    client.models.generate_content.side_effect = [
+        mod.ReadTimeout("secret timeout details"),
+        response(payload()),
+    ]
+    result = service.extract("doc", b"synthetic", "application/pdf")
+    assert client.models.generate_content.call_count == 2
+    assert len(result.raw_metadata["attempts"]) == 2
+    assert result.raw_metadata["attempts"][0]["error_type"] == "ReadTimeout"
+    assert service.wait.call_count == 1
+    assert result.extraction_status == ExtractionStatus.OK
+    assert "secret timeout details" not in result.model_dump_json()
+
+
+def test_httpx2_read_timeout_single_attempt_returns_sanitized_api_error():
+    httpx2 = pytest.importorskip("httpx2")
+    service, client = extractor(payload())
+    service.max_attempts = 1
+    client.models.generate_content.side_effect = httpx2.ReadTimeout("secret timeout details")
+    result = service.extract("doc", b"synthetic", "application/pdf")
+    assert client.models.generate_content.call_count == 1
+    assert result.extraction_status == ExtractionStatus.API_ERROR
+    assert result.raw_metadata["error_type"] == "ReadTimeout"
+    assert "secret timeout details" not in result.model_dump_json()
+
+
 @pytest.mark.parametrize("fields", [
     {"issuer_acronym": "IF205", "issuer_name_acronym_evidence": "IF205"},
     {"issuer_institution": "Instituto Fictício 205", "issuer_acronym": "IF205",

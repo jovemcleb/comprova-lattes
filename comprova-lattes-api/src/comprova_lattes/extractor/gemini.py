@@ -14,6 +14,20 @@ import httpx
 from google import genai
 from google.genai import errors, types
 
+try:
+    import httpx2 as _httpx2
+
+    _HTTP_ERRORS: tuple[type[Exception], ...] = (httpx.HTTPError, _httpx2.HTTPError)
+    _TRANSIENT_HTTP_ERRORS: tuple[type[Exception], ...] = (
+        httpx.TimeoutException,
+        httpx.NetworkError,
+        _httpx2.TimeoutException,
+        _httpx2.NetworkError,
+    )
+except ImportError:  # pragma: no cover
+    _HTTP_ERRORS = (httpx.HTTPError,)
+    _TRANSIENT_HTTP_ERRORS = (httpx.TimeoutException, httpx.NetworkError)
+
 from comprova_lattes.config import Settings
 from comprova_lattes.matcher.models import ExtractedDocumentRecord, ExtractionStatus
 
@@ -142,13 +156,13 @@ class GeminiExtractor:
                 )
                 metadata["attempts"].append({"number": attempt, "status": "OK"})
                 break
-            except (errors.APIError, httpx.HTTPError, OSError) as exc:
+            except (errors.APIError, *_HTTP_ERRORS, OSError) as exc:
                 code = exc.code if isinstance(exc, errors.APIError) else None
                 metadata["attempts"].append({
                     "number": attempt, "error_type": type(exc).__name__, "http_code": code,
                 })
                 transient = code in {408, 429, 500, 502, 503, 504} or isinstance(
-                    exc, (httpx.TimeoutException, httpx.NetworkError)
+                    exc, _TRANSIENT_HTTP_ERRORS
                 )
                 if transient and attempt < self.max_attempts:
                     self.wait(min(2 ** (attempt - 1), 8) + random.random())
